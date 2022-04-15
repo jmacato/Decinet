@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Decinet.Sample", "Decinet.Sample\Decinet.Sample.csproj", "{36F71C95-6342-406D-86DC-CCD6982A7A8F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Decinet", "Decinet\Decinet.csproj", "{284AA1E1-C7A2-4BF3-99E0-66094F8871C5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{36F71C95-6342-406D-86DC-CCD6982A7A8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36F71C95-6342-406D-86DC-CCD6982A7A8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36F71C95-6342-406D-86DC-CCD6982A7A8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36F71C95-6342-406D-86DC-CCD6982A7A8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{284AA1E1-C7A2-4BF3-99E0-66094F8871C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{284AA1E1-C7A2-4BF3-99E0-66094F8871C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{284AA1E1-C7A2-4BF3-99E0-66094F8871C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{284AA1E1-C7A2-4BF3-99E0-66094F8871C5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
