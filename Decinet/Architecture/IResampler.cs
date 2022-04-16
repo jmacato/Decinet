@@ -2,5 +2,5 @@ namespace Decinet.Architecture;
 
 public interface IResampler : IProcessingNode<ISampleFrame, IPlaybackController, IDSPStack>
 {
-    void Initialize(AudioFormat incomingAudioFormat, AudioFormat outgoingAudioFormat);
+    void ConnectBackend(IBackend backend);
 }
