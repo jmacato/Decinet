@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace Decinet.Architecture;
 
-public interface IPlaybackController : INotifyPropertyChanged, IProcessingNode<ISampleFrame, IDecoder, IResampler> 
+public interface IPlaybackController : INotifyPropertyChanged, IProcessingNode<ISampleFrame, IDecoder, IResampler>
 {
     public enum PlaybackStatus
     {
@@ -18,7 +18,8 @@ public interface IPlaybackController : INotifyPropertyChanged, IProcessingNode<I
     void Play();
     void Pause();
     void Stop();
-    bool Seek(TimeSpan time);
-    TimeSpan? TotalDuration { get; }
-
+    TimeSpan? Duration { get; }
+    TimeSpan? Position { get; set; }
+    bool IsSeekable { get; }
+    
 }

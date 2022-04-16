@@ -21,6 +21,7 @@ internal abstract class WaveParser
     protected readonly TimeSpan Duration;
     protected readonly WaveFormat Format;
     protected TimeSpan CurrentPosition;
+    public abstract AudioFormat AudioFormat { get; }
 
     public abstract bool TryGetBytes(int numSamples, out ISampleFrame sampleFrame);
 

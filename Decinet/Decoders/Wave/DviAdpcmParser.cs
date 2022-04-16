@@ -30,7 +30,7 @@ internal class DviAdpcmParser : WaveParser
     // //DviAdpcm is always 16 bits
     // public override TimeSpan? Duration { get; }
     // public override int BitsPerSample => 16;
-    // public override byte[] GetBytes(BinaryReader reader, TimeSpan time, WaveFormat format)
+    // public override byte[] GetBytes(BinaryReader reader, TimeSpan time, WaveFormat audioFormat)
     // {
     //     throw new NotImplementedException();
     // }
@@ -41,9 +41,9 @@ internal class DviAdpcmParser : WaveParser
     //     return (short) (packed[1] << 8 | packed[0]);
     // }
     //
-    // public   byte[] Parse(BinaryReader reader, int size, WaveFormat format)
+    // public   byte[] Parse(BinaryReader reader, int size, WaveFormat audioFormat)
     // {
-    //     int samplesPerBlock = Int16FromLittleEndianBytes(format.ExtraBytes);
+    //     int samplesPerBlock = Int16FromLittleEndianBytes(audioFormat.ExtraBytes);
     //
     //     var blockSize = (4 + (samplesPerBlock - 1) / 2);
     //     if (size % blockSize != 0)
@@ -106,6 +106,8 @@ internal class DviAdpcmParser : WaveParser
     public DviAdpcmParser(BinaryReader currentStream, WaveFormat format, long rawDataStartOffset) : base(currentStream, format, rawDataStartOffset)
     {
     }
+
+    public override AudioFormat AudioFormat { get; }
 
     public override bool TryGetBytes(int numSamples, out ISampleFrame sampleFrame)
     {

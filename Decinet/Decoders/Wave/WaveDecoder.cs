@@ -17,25 +17,10 @@ public class WaveDecoder : IDecoder
     private BinaryReader _dataStream;
     private long _audioChunkStart;
     private IPlaybackController _playbackController;
-    private WaveParser _variant;
-
-    // public override bool IsFinished => _samplesLeft == 0;
-    //
-    // public override TimeSpan Position => TimeSpan.MinValue;
-    //
-    // public override bool HasPosition { get; } = false;
-
-    // public   long GetSamples(int samples, ref byte[] data)
-    // {
-    //     var numSamples = Math.Min(samples, _samplesLeft);
-    //     long byteSize = _audioFormat.BytesPerSample * numSamples;
-    //     long byteOffset = (_numSamples - _samplesLeft) * _audioFormat.BytesPerSample;
-    //
-    //     data = _decodedData.AsSpan<byte>().Slice((int) (byteOffset), (int) byteSize).ToArray();
-    //     _samplesLeft -= numSamples;
-    //
-    //     return numSamples;
-    // }
+    private WaveParser _waveParser;
+    private TimeSpan? _duration;
+    private TimeSpan? _position;
+    private AudioFormat _csaf;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -55,7 +40,9 @@ public class WaveDecoder : IDecoder
 
         _audioChunkStart = _dataStream.BaseStream.Position;
 
-        _variant = WaveParser.GetParser(_dataStream, _format, _audioChunkStart);
+        _waveParser = WaveParser.GetParser(_dataStream, _format, _audioChunkStart);
+
+        CurrentStreamAudioFormat = _waveParser.AudioFormat;
     }
 
     public void Connect(IBackend priorNode, IPlaybackController targetNode)
@@ -69,19 +56,53 @@ public class WaveDecoder : IDecoder
         _dataStream?.Dispose();
     }
 
-    public Format CurrentStreamFormat { get; }
-    public bool IsSeekable { get; }
-    public TimeSpan? TotalDuration { get; }
-    public TimeSpan? Position { get; }
+    /// <inheritdoc />
+    public AudioFormat CurrentStreamAudioFormat
+    {
+        get => _csaf;
+        set
+        {
+            if (_csaf == value) return;
+            _csaf = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentStreamAudioFormat)));
+        }
+    }
 
+    /// <inheritdoc />
+    public bool IsSeekable => _dataStream.BaseStream?.CanRead ?? false;
+
+
+    /// <inheritdoc />
+    public TimeSpan? Duration
+    {
+        get => _duration;
+        set
+        {
+            if (_duration == value) return;
+            _duration = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Duration)));
+        }
+    }
+
+    /// <inheritdoc />
+    public TimeSpan? Position
+    {
+        get => _position;
+        set
+        {
+            if (_position == value) return;
+            _position = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Position)));
+        }
+    }
 
     public bool TrySeek(TimeSpan time)
     {
         return false;
     }
 
-    public bool TryRequestNewFrame()
+    public bool TryRequestNewFrame(int samplesRequested)
     {
-        return _variant.TryGetBytes(1024, out var sampleFrame);
+        return _waveParser.TryGetBytes(samplesRequested, out var sampleFrame);
     }
 }
