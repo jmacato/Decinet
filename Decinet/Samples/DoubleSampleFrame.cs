@@ -5,15 +5,15 @@ namespace Decinet.Samples;
 
 public readonly struct DoubleSampleFrame : ISampleFrame<double>
 {
-    public DoubleSampleFrame(double[] interleavedSampleData, int sampleCount, int channelCount, Format format)
+    public DoubleSampleFrame(double[] interleavedSampleData, int sampleCount, int channelCount, AudioFormat audioFormat)
     {
         InterleavedSampleData = interleavedSampleData;
         SampleCount = sampleCount;
         ChannelCount = channelCount;
-        Format = format;
+        AudioFormat = audioFormat;
     }
 
-    public Format Format { get; }
+    public AudioFormat AudioFormat { get; }
     public int ChannelCount { get; }
     public int SampleCount { get; }
     public double[] InterleavedSampleData { get; }

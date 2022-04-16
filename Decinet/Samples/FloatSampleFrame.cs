@@ -5,15 +5,15 @@ namespace Decinet.Samples;
 
 public readonly struct FloatSampleFrame : ISampleFrame<float>
 {
-    public FloatSampleFrame(float[] interleavedSampleData, int sampleCount, int channelCount, Format format)
+    public FloatSampleFrame(float[] interleavedSampleData, int sampleCount, int channelCount, AudioFormat audioFormat)
     {
         InterleavedSampleData = interleavedSampleData;
         SampleCount = sampleCount;
         ChannelCount = channelCount;
-        Format = format;
+        AudioFormat = audioFormat;
     }
 
-    public Format Format { get; }
+    public AudioFormat AudioFormat { get; }
     public int ChannelCount { get; }
     public int SampleCount { get; }
     public float[] InterleavedSampleData { get; }

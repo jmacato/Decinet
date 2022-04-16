@@ -2,7 +2,7 @@ namespace Decinet.Architecture;
 
 public interface ISampleFrame : IDisposable
 { 
-    Format Format { get; }
+    AudioFormat AudioFormat { get; }
     int ChannelCount { get; }
     int SampleCount { get; }
 }
