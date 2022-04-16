@@ -1,6 +1,6 @@
 namespace Decinet.Architecture;
 
-public interface IResampler : IProcessingNode<IPlaybackController, IDSPStack>
+public interface IResampler : IProcessingNode<ISampleFrame, IPlaybackController, IDSPStack>
 {
     void Initialize(Format incomingFormat, Format outgoingFormat);
 }
