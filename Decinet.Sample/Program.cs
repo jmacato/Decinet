@@ -7,12 +7,13 @@ using Decinet.Decoders.Wave;
 Console.WriteLine("Hello, World!");
 
 
-var k = new WaveDecoder();
+var decoder = new WaveDecoder();
 var y = "/Users/jumarmacato/jenny-s16.wav";
-
 using var fs = File.OpenRead(y);
-k.Receive(fs);
+
+
+decoder.Receive(fs);
 
 do
 {
-} while (k.TryRequestNewFrame());
+} while (decoder.TryRequestNewFrame(1078));
