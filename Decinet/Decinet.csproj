@@ -4,6 +4,12 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>preview</LangVersion>
+        <EnablePreviewFeatures>True</EnablePreviewFeatures>
     </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
+    </ItemGroup>
 
 </Project>
