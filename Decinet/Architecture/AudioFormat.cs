@@ -10,16 +10,17 @@ public readonly struct AudioFormat : IEquatable<AudioFormat>
         ChannelCount = channelCount;
     }
 
-    Type SampleType { get; }
-    int BytesPerSample { get; }
-    int SampleRate { get; }
-    int ChannelCount { get; }
-    
+    public Type SampleType { get; }
+    public int BytesPerSample { get; }
+    public int SampleRate { get; }
+    public int ChannelCount { get; }
+
 
     /// <inheritdoc />
     public bool Equals(AudioFormat other)
     {
-        return SampleType == other.SampleType && BytesPerSample == other.BytesPerSample && SampleRate == other.SampleRate && ChannelCount == other.ChannelCount;
+        return SampleType == other.SampleType && BytesPerSample == other.BytesPerSample &&
+               SampleRate == other.SampleRate && ChannelCount == other.ChannelCount;
     }
 
     /// <inheritdoc />
