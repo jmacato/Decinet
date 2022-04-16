@@ -3,9 +3,9 @@ using Decinet.Architecture;
 
 namespace Decinet.Samples;
 
-public readonly struct ShortSampleFrame : ISampleFrame<short>
+public readonly struct DoubleSampleFrame : ISampleFrame<double>
 {
-    public ShortSampleFrame(short[] interleavedSampleData, int sampleCount, int channelCount, Format format)
+    public DoubleSampleFrame(double[] interleavedSampleData, int sampleCount, int channelCount, Format format)
     {
         InterleavedSampleData = interleavedSampleData;
         SampleCount = sampleCount;
@@ -16,10 +16,10 @@ public readonly struct ShortSampleFrame : ISampleFrame<short>
     public Format Format { get; }
     public int ChannelCount { get; }
     public int SampleCount { get; }
-    public short[] InterleavedSampleData { get; }
-    
+    public double[] InterleavedSampleData { get; }
+
     public void Dispose()
     {
-        ArrayPool<short>.Shared.Return(InterleavedSampleData);
+        ArrayPool<double>.Shared.Return(InterleavedSampleData);
     }
 }

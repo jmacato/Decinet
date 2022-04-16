@@ -6,22 +6,23 @@ internal abstract class WaveParser
 {
     internal WaveParser(BinaryReader currentStream,
         WaveFormat format,
-        long rawDataStart)
+        long rawDataStartOffset)
     {
         CurrentStream = currentStream;
-        RawDataStart = rawDataStart;
-        var totalRawDataBytes = currentStream.BaseStream.Length - rawDataStart;
-        var duration = (float)totalRawDataBytes / (float)format.ByteRate;
-        var t = TimeSpan.FromSeconds(duration);
+        RawDataStartOffset = rawDataStartOffset;
+        TotalRawDataBytes = currentStream.BaseStream.Length - rawDataStartOffset;
+        Format = format;
+        Duration = TimeSpan.FromSeconds(TotalRawDataBytes / (float)format.ByteRate);
     }
 
     protected readonly BinaryReader CurrentStream;
-    protected readonly long RawDataStart;
+    protected readonly long RawDataStartOffset;
+    protected readonly long TotalRawDataBytes;
     protected readonly TimeSpan Duration;
+    protected readonly WaveFormat Format;
+    protected TimeSpan CurrentPosition;
 
-    public abstract ISampleFrame GetBytes(
-        TimeSpan position,
-        int numSamples);
+    public abstract bool TryGetBytes(int numSamples, out ISampleFrame sampleFrame);
 
     public static WaveParser GetParser(
         BinaryReader br,

@@ -1,6 +1,6 @@
 namespace Decinet.Architecture;
 
-public interface ISampleFrame 
+public interface ISampleFrame : IDisposable
 { 
     Format Format { get; }
     int ChannelCount { get; }
@@ -9,5 +9,5 @@ public interface ISampleFrame
 
 public interface ISampleFrame<out TSample> : ISampleFrame where TSample : INumber<TSample>
 {
-    TSample[,] SampleData { get; }
+    TSample[] InterleavedSampleData { get; }
 }

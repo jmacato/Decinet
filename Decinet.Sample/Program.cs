@@ -8,5 +8,11 @@ Console.WriteLine("Hello, World!");
 
 
 var k = new WaveDecoder();
+var y = "/Users/jumarmacato/jenny-s16.wav";
 
-k.Receive(File.Open("/Users/jumarmacato/jenny-s16.wav", FileMode.Open));
+using var fs = File.OpenRead(y);
+k.Receive(fs);
+
+do
+{
+} while (k.TryRequestNewFrame());

@@ -103,11 +103,11 @@ internal class DviAdpcmParser : WaveParser
     //
     //     return buffer;
     // }
-    public DviAdpcmParser(BinaryReader currentStream, WaveFormat format, long rawDataStart) : base(currentStream, format, rawDataStart)
+    public DviAdpcmParser(BinaryReader currentStream, WaveFormat format, long rawDataStartOffset) : base(currentStream, format, rawDataStartOffset)
     {
     }
 
-    public override ISampleFrame GetBytes(TimeSpan position, int numSamples)
+    public override bool TryGetBytes(int numSamples, out ISampleFrame sampleFrame)
     {
         throw new NotImplementedException();
     }

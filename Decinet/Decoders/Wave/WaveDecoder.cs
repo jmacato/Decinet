@@ -38,11 +38,11 @@ public class WaveDecoder : IDecoder
     // }
 
     public event PropertyChangedEventHandler? PropertyChanged;
-    
+
     public void Receive(Stream data)
     {
         _dataStream = new BinaryReader(data);
-        
+
         _header = RiffHeader.Parse(_dataStream);
         _format = WaveFormat.Parse(_dataStream);
 
@@ -50,11 +50,11 @@ public class WaveDecoder : IDecoder
         {
             _fact = WaveFact.Parse(_dataStream);
         }
-        
+
         _metadata = WaveData.Parse(_dataStream);
-        
+
         _audioChunkStart = _dataStream.BaseStream.Position;
-        
+
         _variant = WaveParser.GetParser(_dataStream, _format, _audioChunkStart);
     }
 
@@ -73,7 +73,7 @@ public class WaveDecoder : IDecoder
     public bool IsSeekable { get; }
     public TimeSpan? TotalDuration { get; }
     public TimeSpan? Position { get; }
-    
+
 
     public bool TrySeek(TimeSpan time)
     {
@@ -82,6 +82,6 @@ public class WaveDecoder : IDecoder
 
     public bool TryRequestNewFrame()
     {
-        return false;
+        return _variant.TryGetBytes(1024, out var sampleFrame);
     }
 }
