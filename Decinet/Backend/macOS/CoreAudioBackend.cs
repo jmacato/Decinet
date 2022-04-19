@@ -102,6 +102,7 @@ public class CoreAudioBackend : IBackend
         for (var channels = 0; channels < data.Count; channels++)
         for (var sampleByteCounter = 0; sampleByteCounter < _desiredAudioFormat.BytesPerSample; sampleByteCounter++)
         {
+            if(tempBufferCounter >= tempBuffer.Length) break;
             var sampleByte = tempBuffer[tempBufferCounter];
             var curDat = (byte*) data[channels].Data;
             curDat[channelCounters[channels]++] = sampleByte;

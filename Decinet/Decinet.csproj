@@ -11,6 +11,7 @@
 
     <ItemGroup>
       <PackageReference Include="NVorbis" Version="0.10.4" />
+      <PackageReference Include="NWaves" Version="0.9.6" />
       <PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
     </ItemGroup>
 

@@ -10,14 +10,14 @@ using Decinet.Decoders.Wave;
 Console.WriteLine("Hello, World!");
 
 
-const string y = "/Users/jumarmacato/money.ogg";
+const string y = "/Users/jumarmacato/jny.ogg";
 using var fs = File.OpenRead(y);
 
 
 var wavDecoder = new VorbisDecoder();
 var playerController = new AudioPlaybackController();
 var resampler = new ShortToFloatResampler();
-var wdlResampler = new WdlResampler();
+var wdlResampler = new NWaveResampler();
 var dspStack = new PassthroughDSPStack();
 var backend = new CoreAudioBackend();
 
