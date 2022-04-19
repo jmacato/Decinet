@@ -18,8 +18,13 @@ public readonly struct ShortSampleFrame : ISampleFrame<short>
     public int SampleCount { get; }
     public short[] InterleavedSampleData { get; }
     
+    public static ShortSampleFrame Create(int samplesCount, int channelCount, AudioFormat audioFormat)
+    {
+        return new ShortSampleFrame(ArrayPool<short>.Shared.Rent(samplesCount * channelCount), samplesCount, channelCount, audioFormat);
+    }
+    
     public void Dispose()
     {
-        ArrayPool<short>.Shared.Return(InterleavedSampleData);
+        ArrayPool<short>.Shared.Return(InterleavedSampleData, true);
     }
 }

@@ -10,6 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="NVorbis" Version="0.10.4" />
       <PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
     </ItemGroup>
 

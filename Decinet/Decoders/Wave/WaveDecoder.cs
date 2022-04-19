@@ -21,6 +21,7 @@ public class WaveDecoder : IDecoder
     private TimeSpan? _duration;
     private TimeSpan? _position;
     private AudioFormat _csaf;
+    private bool _ready;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -40,9 +41,11 @@ public class WaveDecoder : IDecoder
 
         _audioChunkStart = _dataStream.BaseStream.Position;
 
-        _waveParser = WaveParser.GetParser(_dataStream, _format, _audioChunkStart);
+        _waveParser = WaveParser.GetParser(_dataStream, _format, _audioChunkStart, _metadata.SubChunkSize);
 
         CurrentStreamAudioFormat = _waveParser.AudioFormat;
+
+        _ready = true;
     }
 
     public void Connect(IBackend priorNode, IPlaybackController targetNode)
@@ -96,6 +99,9 @@ public class WaveDecoder : IDecoder
         }
     }
 
+    /// <inheritdoc />
+    public bool Ready => _ready;
+
     public bool TrySeek(TimeSpan time)
     {
         return false;
@@ -103,6 +109,13 @@ public class WaveDecoder : IDecoder
 
     public bool TryRequestNewFrame(int samplesRequested)
     {
-        return _waveParser.TryGetBytes(samplesRequested, out var sampleFrame);
+        if (!_ready) return false;
+        
+        var res = _waveParser.TryGetBytes(samplesRequested, out var sampleFrame);
+        
+        if (res)
+            _playbackController.Receive(sampleFrame);
+        
+        return res;
     }
 }

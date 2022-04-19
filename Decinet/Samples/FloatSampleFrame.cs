@@ -13,6 +13,11 @@ public readonly struct FloatSampleFrame : ISampleFrame<float>
         AudioFormat = audioFormat;
     }
 
+    public static FloatSampleFrame Create(int samplesCount, int channelCount, AudioFormat audioFormat)
+    {
+        return new FloatSampleFrame(ArrayPool<float>.Shared.Rent(samplesCount * channelCount), samplesCount, channelCount, audioFormat);
+    }
+
     public AudioFormat AudioFormat { get; }
     public int ChannelCount { get; }
     public int SampleCount { get; }
@@ -20,6 +25,6 @@ public readonly struct FloatSampleFrame : ISampleFrame<float>
 
     public void Dispose()
     {
-        ArrayPool<float>.Shared.Return(InterleavedSampleData);
+        ArrayPool<float>.Shared.Return(InterleavedSampleData, true);
     }
 }
