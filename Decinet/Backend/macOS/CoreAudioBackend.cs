@@ -87,12 +87,19 @@ public class CoreAudioBackend : IBackend
         {
             return AudioUnitStatus.NoError;
         }
-        
+
         backendCalls++;
 
-        var tempBuffer = new byte[sizeof(float) * _data.Length];
+        var tempBuffer = new byte[sizeof(float) * numberFrames * data.Count];
 
-        Buffer.BlockCopy(_data, 0, tempBuffer, 0, tempBuffer.Length);
+
+        Buffer.BlockCopy(_data, 0, tempBuffer, 0, _data.Length * sizeof(float));
+
+        var diff = (_data.Length / data.Count);
+        diff *= sizeof(float) * data.Count;
+
+        _tempStream.Write(tempBuffer, 0, diff);
+
 
         var channelCounters = new int[data.Count];
 
@@ -102,14 +109,14 @@ public class CoreAudioBackend : IBackend
         for (var channels = 0; channels < data.Count; channels++)
         for (var sampleByteCounter = 0; sampleByteCounter < _desiredAudioFormat.BytesPerSample; sampleByteCounter++)
         {
-            if(tempBufferCounter >= tempBuffer.Length) break;
+            if (tempBufferCounter >= tempBuffer.Length) break;
             var sampleByte = tempBuffer[tempBufferCounter];
             var curDat = (byte*) data[channels].Data;
             curDat[channelCounters[channels]++] = sampleByte;
             tempBufferCounter++;
         }
 
-         return AudioUnitStatus.NoError;
+        return AudioUnitStatus.NoError;
     }
 
     /// <inheritdoc />
@@ -123,6 +130,7 @@ public class CoreAudioBackend : IBackend
         {
             _data = floatFrame.InterleavedSampleData;
             _hasData = true;
+
 
             /// _circularBuffer.Write(floatFrame.InterleavedSampleData, 0, floatFrame.InterleavedSampleData.Length);
         }
