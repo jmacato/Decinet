@@ -19,7 +19,7 @@ public readonly struct AudioFormat : IEquatable<AudioFormat>
     /// <inheritdoc />
     public bool Equals(AudioFormat other)
     {
-        return SampleType.Name == other.SampleType.Name && BytesPerSample == other.BytesPerSample &&
+        return SampleType == other.SampleType && BytesPerSample == other.BytesPerSample &&
                SampleRate == other.SampleRate && ChannelCount == other.ChannelCount;
     }
 

@@ -126,7 +126,7 @@ public class CircularBuffer
     ///     ring buffer
     /// </param>
     /// <param name="count">The number of bytes to write</param>
-    public void Write<T>(T[] buffer, int index, int count)
+    public void Write(byte[] buffer, int index, int count)
     {
         if (count == 0) return;
 
@@ -169,7 +169,7 @@ public class CircularBuffer
     ///     The total number of bytes read into the buffer. This might be less than the number of bytes requested if that
     ///     number of bytes are not currently available, or zero if the ring buffer is empty
     /// </returns>
-    public int Read<T>(T[] buffer, int index, int count)
+    public int Read(byte[] buffer, int index, int count)
     {
         lock (this)
         {

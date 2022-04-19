@@ -14,6 +14,7 @@ public class ShortToFloatResampler : IResampler
     private IDSPStack? _dspStack;
     private bool _isDisposed = false;
     private FileStream _pip;
+    private IResampler? _outResampler;
 
     public ShortToFloatResampler()
     {
@@ -31,8 +32,8 @@ public class ShortToFloatResampler : IResampler
         if (incomingFormat == receivingFormat)
             _dspStack?.Receive(data);
 
-        if (incomingFormat.SampleType != typeof(short) || receivingFormat.SampleType != typeof(float)) return;
-        
+        // if (incomingFormat.SampleType != typeof(short) || receivingFormat.SampleType != typeof(float)) return;
+
         if (incomingFormat.SampleRate != receivingFormat.SampleRate)
         {
             // TODO: Warn here?
@@ -40,15 +41,36 @@ public class ShortToFloatResampler : IResampler
 
         if (data is not ShortSampleFrame frame)
         {
-            throw new InvalidDataException();
+
+            if (_outResampler is not null)
+            {
+                _outResampler?.Receive(data);
+            }
+            else
+            {
+                _dspStack?.Receive(data);
+            }
+            
+            return;
         }
 
         ProcessShortToFloat(frame,
             receivingFormat,
             out FloatSampleFrame sampleFrame);
 
-        _dspStack?.Receive(sampleFrame);
+        if (_outResampler is not null)
+        {
+            _outResampler?.Receive(sampleFrame);
+        }
+        else
+        {
+            _dspStack?.Receive(sampleFrame);
+        }
+    }
 
+    public void ConnectOutToResampler(IResampler resampler)
+    {
+        _outResampler = resampler;
     }
 
     private void ProcessShortToFloat(ShortSampleFrame data, AudioFormat receivingFormat,

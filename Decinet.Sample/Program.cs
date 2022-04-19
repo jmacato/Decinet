@@ -17,6 +17,7 @@ using var fs = File.OpenRead(y);
 var wavDecoder = new VorbisDecoder();
 var playerController = new AudioPlaybackController();
 var resampler = new ShortToFloatResampler();
+var wdlResampler = new WdlResampler();
 var dspStack = new PassthroughDSPStack();
 var backend = new CoreAudioBackend();
 
@@ -26,6 +27,12 @@ wavDecoder.Receive(fs);
 playerController.Connect(wavDecoder, resampler);
 resampler.Connect(playerController, dspStack);
 resampler.ConnectBackend(backend);
+
+wdlResampler.Connect(playerController, dspStack);
+wdlResampler.ConnectBackend(backend);
+
+resampler.ConnectOutToResampler(wdlResampler);
+
 dspStack.Connect(resampler, backend);
 backend.Connect(dspStack, wavDecoder);
 
