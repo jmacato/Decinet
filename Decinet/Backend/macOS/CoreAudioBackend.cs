@@ -90,7 +90,7 @@ public class CoreAudioBackend : IBackend
         
         backendCalls++;
 
-        var tempBuffer = ArrayPool<byte>.Shared.Rent(sizeof(float) * _data.Length);
+        var tempBuffer = new byte[sizeof(float) * _data.Length];
 
         Buffer.BlockCopy(_data, 0, tempBuffer, 0, tempBuffer.Length);
 
@@ -108,8 +108,7 @@ public class CoreAudioBackend : IBackend
             tempBufferCounter++;
         }
 
-        ArrayPool<byte>.Shared.Return(tempBuffer, true);
-        return AudioUnitStatus.NoError;
+         return AudioUnitStatus.NoError;
     }
 
     /// <inheritdoc />

@@ -757,22 +757,19 @@ public class WdlResampler : IResampler
         int framesRequested = count / channels;
         int inNeeded = ResamplePrepare(framesRequested, receivingFormat.ChannelCount, out var inBuffer,
             out var inBufferOffset);
-        // int inAvailable = source.Read(inBuffer, inBufferOffset, inNeeded * channels) / channels;
 
-        var buf = ArrayPool<float>.Shared.Rent(inNeeded * channels);
-        floatFrame.InterleavedSampleData.AsSpan(0, inNeeded * channels).CopyTo(inBuffer);
+        var buf = new float[inNeeded * channels];
+
+        Array.Copy(floatFrame.InterleavedSampleData, 0, inBuffer, inBufferOffset, inNeeded);
+
+        // floatFrame.InterleavedSampleData.AsSpan(0, inNeeded * channels).CopyTo(inBuffer);
         int outAvailable = ResampleOut(buf, 0, framesRequested, inBuffer.Length / channels, channels);
 
         floatFrame.Dispose();
 
-        var newFrame = FloatSampleFrame.Create(outAvailable, receivingFormat.ChannelCount,
-            receivingFormat
-        );
-        
-        buf.CopyTo(newFrame.InterleavedSampleData, 0);
-        
-        ArrayPool<float>.Shared.Return(buf);
-        
+        var newFrame = new FloatSampleFrame(buf, buf.Length, channels, receivingFormat);
+
+
         _dspStack?.Receive(newFrame);
     }
 
@@ -790,7 +787,7 @@ public class WdlResampler : IResampler
         _backend = backend;
         SetMode(true, 2, false);
         SetFilterParms();
-        SetFeedMode(true); 
+        SetFeedMode(true);
     }
 
     /// <inheritdoc />

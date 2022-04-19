@@ -10,7 +10,7 @@ using Decinet.Decoders.Wave;
 Console.WriteLine("Hello, World!");
 
 
-const string y = "/Users/jumarmacato/speak.ogg";
+const string y = "/Users/jumarmacato/money.ogg";
 using var fs = File.OpenRead(y);
 
 
