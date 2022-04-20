@@ -40,11 +40,11 @@ public class NWaveResampler : IResampler
     private IPlaybackController _playback;
     private IDSPStack _dsp;
     private IBackend _backend;
-    private readonly ReSamplerX _resamplerC;
+    private readonly Resampler _resamplerC;
 
     public NWaveResampler()
     {
-        _resamplerC = new ReSamplerX(true);
+        _resamplerC = new NWaves.Operations.Resampler();
     }
 
     /// <inheritdoc />
@@ -57,6 +57,12 @@ public class NWaveResampler : IResampler
 
         var ratio = (float) _backend.DesiredAudioFormat.SampleRate / (float) frame.AudioFormat.SampleRate;
 
+        if (_backend.DesiredAudioFormat.SampleRate == frame.AudioFormat.SampleRate)
+        {
+            _dsp.Receive(data);
+            return;
+        }
+        
         var signals = new float[frame.ChannelCount][];
 
         for (var i = 0; i < signals.Length; i++)
@@ -85,9 +91,15 @@ public class NWaveResampler : IResampler
         
         for (var j = 0; j < frame.ChannelCount; j++)
         {
-            var res = _resamplerC.Process(ratio, signals[j], 0, signals[j].Length, 
-                false, output[j], 0,
-                ratiodSampleCount);
+
+            var re = _resamplerC.Resample(new DiscreteSignal(frame.AudioFormat.SampleRate, signals[j]),
+                _backend.DesiredAudioFormat.SampleRate);
+
+            output[j] = re.Samples;
+
+            // var res = _resamplerC.Process(ratio, signals[j], 0, signals[j].Length, 
+            //     false, output[j], 0,
+            //     ratiodSampleCount);
         }
         
         interleaveIndex = 0;

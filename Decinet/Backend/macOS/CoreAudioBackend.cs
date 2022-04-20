@@ -67,39 +67,55 @@ public class CoreAudioBackend : IBackend
         _audioUnit.Initialize();
 
         _tempStream = File.Create($"{Guid.NewGuid():N}.float16.raw");
+
+        _timer = new Thread(FrameCallback);
+    }
+
+    private void FrameCallback()
+    {
+        do
+        {
+            Thread.Sleep(TimeSpan.FromMilliseconds(10));
+
+            if (incomingFrames.Count == 0 )
+            {
+                _decoder.TryRequestNewFrame(2048);
+                continue;
+            }
+
+            using var currentFrame = incomingFrames.Dequeue();
+
+            var tempByteArray = new byte[currentFrame.InterleavedSampleData.Length * sizeof(float)];
+            
+            Buffer.BlockCopy(currentFrame.InterleavedSampleData, 0, tempByteArray, 0, tempByteArray.Length);
+        
+            _circularBuffer.Write(tempByteArray, 0, tempByteArray.Length);
+            
+
+        } while (_audioUnit.IsPlaying);
     }
 
     private int backendCalls = 0;
     private int bufferCalls = 0;
     private float[] _data;
     private bool _hasData;
+    private Queue<FloatSampleFrame> incomingFrames = new();
+    private readonly Thread _timer;
+    private bool _connected;
 
     private unsafe AudioUnitStatus render_CallBack(AudioUnitRenderActionFlags actionFlags, AudioTimeStamp timeStamp,
         uint busNumber, uint numberFrames, AudioBuffers data)
     {
-        _decoder.TryRequestNewFrame((int) numberFrames);
-
-        if (_hasData)
-        {
-            _hasData = false;
-        }
-        else
+        if (_circularBuffer.Length < numberFrames)
         {
             return AudioUnitStatus.NoError;
         }
 
-        backendCalls++;
+        var tB = new byte[numberFrames * data.Count * sizeof(float)];
 
-        var tempBuffer = new byte[sizeof(float) * numberFrames * data.Count];
+        _circularBuffer.Read(tB, 0, tB.Length);
 
-
-        Buffer.BlockCopy(_data, 0, tempBuffer, 0, _data.Length * sizeof(float));
-
-        var diff = (_data.Length / data.Count);
-        diff *= sizeof(float) * data.Count;
-
-        _tempStream.Write(tempBuffer, 0, diff);
-
+        // _tempStream.WriteAsync(tB, 0, tB.Length);
 
         var channelCounters = new int[data.Count];
 
@@ -107,10 +123,9 @@ public class CoreAudioBackend : IBackend
 
         for (var samples = 0; samples < numberFrames; samples++)
         for (var channels = 0; channels < data.Count; channels++)
-        for (var sampleByteCounter = 0; sampleByteCounter < _desiredAudioFormat.BytesPerSample; sampleByteCounter++)
+        for (var sampleByteCounter = 0; sampleByteCounter < sizeof(float); sampleByteCounter++)
         {
-            if (tempBufferCounter >= tempBuffer.Length) break;
-            var sampleByte = tempBuffer[tempBufferCounter];
+            var sampleByte = tB[tempBufferCounter];
             var curDat = (byte*) data[channels].Data;
             curDat[channelCounters[channels]++] = sampleByte;
             tempBufferCounter++;
@@ -128,11 +143,7 @@ public class CoreAudioBackend : IBackend
         if (data is FloatSampleFrame floatFrame &&
             data.AudioFormat == _desiredAudioFormat)
         {
-            _data = floatFrame.InterleavedSampleData;
-            _hasData = true;
-
-
-            /// _circularBuffer.Write(floatFrame.InterleavedSampleData, 0, floatFrame.InterleavedSampleData.Length);
+            incomingFrames.Enqueue(floatFrame);
         }
     }
 
@@ -142,11 +153,14 @@ public class CoreAudioBackend : IBackend
         _dspEngine = priorNode;
         _decoder = targetNode;
         _audioUnit.Start();
+        _timer.Start();
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
+        _connected = false;
+
         if (_audioUnit.IsPlaying)
             _audioUnit?.Stop();
     }
