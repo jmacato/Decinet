@@ -107,8 +107,11 @@ public class WaveDecoder : IDecoder
         return false;
     }
 
-    public bool TryRequestNewFrame(int samplesRequested)
+    public bool TryRequestNewFrame(TimeSpan sampleTime)
     {
+        var samplesRequested = (int) Math.Round(sampleTime.TotalSeconds * _waveParser.AudioFormat.ChannelCount *
+                                                _waveParser.AudioFormat.SampleRate * 
+                                                _waveParser.AudioFormat.BytesPerSample);
         if (!_ready) return false;
         
         var res = _waveParser.TryGetBytes(samplesRequested, out var sampleFrame);

@@ -11,5 +11,5 @@ public interface IDecoder : INotifyPropertyChanged, IProcessingNode<Stream, IBac
     TimeSpan? Position { get; }
     bool Ready { get; }
     bool TrySeek(TimeSpan time);
-    bool TryRequestNewFrame(int samplesRequested);
+    bool TryRequestNewFrame(TimeSpan sampleTime);
 }

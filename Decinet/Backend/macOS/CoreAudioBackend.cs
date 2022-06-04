@@ -55,9 +55,9 @@ public class CoreAudioBackend : IBackend
         _desiredAudioFormat = new AudioFormat(formatType, hwFormat.BitsPerChannel / 8, (int) hwFormat.SampleRate,
             hwFormat.ChannelsPerFrame);
 
-        _audioBuffer = new CircularBuffer(TimeSpan.FromMilliseconds(30), _desiredAudioFormat.SampleRate,
+        _audioBuffer = new CircularBuffer(TimeSpan.FromMilliseconds(300), _desiredAudioFormat.SampleRate,
             _desiredAudioFormat.BytesPerSample, _desiredAudioFormat.ChannelCount);
-        
+
         _audioUnit.SetRenderCallback(render_CallBack, AudioUnitScopeType.Output, 0);
 
         _audioUnit.Initialize();
@@ -73,7 +73,7 @@ public class CoreAudioBackend : IBackend
 
             if (incomingFrames.Count == 0)
             {
-                _decoder.TryRequestNewFrame(2048);
+                _decoder.TryRequestNewFrame(TimeSpan.FromMilliseconds(100));
                 continue;
             }
 

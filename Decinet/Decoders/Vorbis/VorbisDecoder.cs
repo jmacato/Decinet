@@ -104,9 +104,12 @@ public class VorbisDecoder : IDecoder
     }
 
     /// <inheritdoc />
-    public bool TryRequestNewFrame(int samplesRequested)
+    public bool TryRequestNewFrame(TimeSpan sampleTime)
     {
-        var samples = FloatSampleFrame.Create(samplesRequested, _currentStreamAudioFormat1.ChannelCount,
+        var capacity = (int) Math.Round(sampleTime.TotalSeconds * _currentStreamAudioFormat1.ChannelCount * _currentStreamAudioFormat1.SampleRate * _currentStreamAudioFormat1.BytesPerSample);
+
+        
+        var samples = FloatSampleFrame.Create(capacity, _currentStreamAudioFormat1.ChannelCount,
             _currentStreamAudioFormat1);
 
         var res = _reader.ReadSamples(samples.InterleavedSampleData, 0, samples.InterleavedSampleData.Length);
