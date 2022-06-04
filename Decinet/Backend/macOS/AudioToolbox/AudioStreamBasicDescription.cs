@@ -5,15 +5,15 @@ namespace Decinet.Backend.macOS.AudioToolbox;
 [StructLayout(LayoutKind.Sequential)]
 public struct AudioStreamBasicDescription
 {
-    private double SampleRate;
-    private AudioFormatType Format;
-    private AudioFormatFlags FormatFlags;
-    private int BytesPerPacket; // uint
-    private int FramesPerPacket; // uint
-    private int BytesPerFrame; // uint
-    private int ChannelsPerFrame; // uint
-    private int BitsPerChannel; // uint
-    private int Reserved; // uint
+    public double SampleRate;
+    public AudioFormatType Format;
+    public AudioFormatFlags FormatFlags;
+    public int BytesPerPacket; // uint
+    public int FramesPerPacket; // uint
+    public int BytesPerFrame; // uint
+    public int ChannelsPerFrame; // uint
+    public int BitsPerChannel; // uint
+    public int Reserved; // uint
     
     private AudioStreamBasicDescription(AudioFormatType formatType)
         : this()
