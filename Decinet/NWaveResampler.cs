@@ -1,35 +1,5 @@
-// This class based on the Resampler that is part of Cockos WDL
-// originally written in C++ and ported to C# for NAudio by Mark Heath
-// Used in NAudio with permission from Justin Frankel
-// Original WDL License:
-//     Copyright (C) 2005 and later Cockos Incorporated
-//     
-//     Portions copyright other contributors, see each source file for more information
-// 
-//     This software is provided 'as-is', without any express or implied
-//     warranty.  In no event will the authors be held liable for any damages
-//     arising from the use of this software.
-// 
-//     Permission is granted to anyone to use this software for any purpose,
-//     including commercial applications, and to alter it and redistribute it
-//     freely, subject to the following restrictions:
-// 
-//     1. The origin of this software must not be misrepresented; you must not
-//        claim that you wrote the original software. If you use this software
-//        in a product, an acknowledgment in the product documentation would be
-//        appreciated but is not required.
-//     2. Altered source versions must be plainly marked as such, and must not be
-//        misrepresented as being the original software.
-//     3. This notice may not be removed or altered from any source distribution.
-
-
-// default to floats for audio samples
-
-using System.Buffers;
 using Decinet.Architecture;
 using Decinet.Samples;
-using LibResample.Sharp;
-using NWaves.Filters.Base;
 using NWaves.Operations;
 using NWaves.Signals;
 
@@ -55,7 +25,7 @@ public class NWaveResampler : IResampler
             return;
         }
 
-        var ratio = (float) _backend.DesiredAudioFormat.SampleRate / (float) frame.AudioFormat.SampleRate;
+        var ratio =  (float) frame.AudioFormat.SampleRate /  (float)_backend.DesiredAudioFormat.SampleRate;
 
         if (_backend.DesiredAudioFormat.SampleRate == frame.AudioFormat.SampleRate)
         {
@@ -88,7 +58,9 @@ public class NWaveResampler : IResampler
         {
             output[i] = new float[ratiodSampleCount];
         }
-        
+
+
+        int prevSampleCount = 0;
         for (var j = 0; j < frame.ChannelCount; j++)
         {
 
@@ -97,9 +69,14 @@ public class NWaveResampler : IResampler
 
             output[j] = re.Samples;
 
-            // var res = _resamplerC.Process(ratio, signals[j], 0, signals[j].Length, 
-            //     false, output[j], 0,
-            //     ratiodSampleCount);
+            if (prevSampleCount != output[j].Length && prevSampleCount != 0)
+            {
+                
+            }
+            else
+            {
+                prevSampleCount = output[j].Length;
+            }
         }
         
         interleaveIndex = 0;

@@ -15,7 +15,7 @@ public class CoreAudioBackend : IBackend
     private IDSPStack _dspEngine;
     private IDecoder _decoder;
     private readonly AudioUnit.AudioUnit _audioUnit;
-    // private readonly FileStream _tempStream;
+    private readonly FileStream _tempStream;
 
     public CoreAudioBackend()
     {
@@ -55,14 +55,12 @@ public class CoreAudioBackend : IBackend
         _desiredAudioFormat = new AudioFormat(formatType, hwFormat.BitsPerChannel / 8, (int) hwFormat.SampleRate,
             hwFormat.ChannelsPerFrame);
 
-        _audioBuffer = new AudioFifoBuffer(TimeSpan.FromSeconds(10), _desiredAudioFormat.SampleRate,
+        _audioBuffer = new CircularBuffer(TimeSpan.FromMilliseconds(30), _desiredAudioFormat.SampleRate,
             _desiredAudioFormat.BytesPerSample, _desiredAudioFormat.ChannelCount);
-
+        
         _audioUnit.SetRenderCallback(render_CallBack, AudioUnitScopeType.Output, 0);
 
         _audioUnit.Initialize();
-
-        // _tempStream = File.Create($"{Guid.NewGuid():N}.float16.raw");
 
         _timer = new Thread(FrameCallback);
     }
@@ -75,7 +73,7 @@ public class CoreAudioBackend : IBackend
 
             if (incomingFrames.Count == 0)
             {
-                _decoder.TryRequestNewFrame(9048);
+                _decoder.TryRequestNewFrame(2048);
                 continue;
             }
 
@@ -85,16 +83,28 @@ public class CoreAudioBackend : IBackend
 
             Buffer.BlockCopy(currentFrame.InterleavedSampleData, 0, tempByteArray, 0, tempByteArray.Length);
 
-            Label:
-            var canPush = _audioBuffer.TryPushData(tempByteArray);
+            int tbaCount = 0;
 
-            if (!canPush)
+            while (true)
             {
-                Thread.Sleep(TimeSpan.FromMilliseconds(1));
-                goto Label;
+                if (tbaCount >= tempByteArray.Length)
+                {
+                    break;
+                }
+
+                var canAdd = _audioBuffer.TryAdd(tempByteArray[tbaCount], 2);
+
+                if (!canAdd)
+                {
+                    Thread.Sleep(1);
+                    continue;
+                }
+
+                tbaCount++;
             }
         } while (_audioUnit.IsPlaying);
     }
+
 
     private int backendCalls = 0;
     private int bufferCalls = 0;
@@ -103,12 +113,15 @@ public class CoreAudioBackend : IBackend
     private Queue<FloatSampleFrame> incomingFrames = new();
     private readonly Thread _timer;
     private bool _connected;
-    private readonly AudioFifoBuffer _audioBuffer;
+    private readonly CircularBuffer _audioBuffer;
 
     private unsafe AudioUnitStatus render_CallBack(AudioUnitRenderActionFlags actionFlags, AudioTimeStamp timeStamp,
         uint busNumber, uint numberFrames, AudioBuffers data)
     {
-        _audioBuffer.GetData((int) numberFrames * data.Count * sizeof(float), out var tB);
+        if (_audioBuffer.Count == 0)
+        {
+            return AudioUnitStatus.OK;
+        }
 
         var channelCounters = new int[data.Count];
 
@@ -118,11 +131,13 @@ public class CoreAudioBackend : IBackend
         for (var channels = 0; channels < data.Count; channels++)
         for (var sampleByteCounter = 0; sampleByteCounter < sizeof(float); sampleByteCounter++)
         {
-            var sampleByte = tB[tempBufferCounter];
+            if (_audioBuffer.Count == 0) break;
+            var sampleByte = _audioBuffer.Read();
             var curDat = (byte*) data[channels].Data;
             curDat[channelCounters[channels]++] = sampleByte;
             tempBufferCounter++;
         }
+
 
         return AudioUnitStatus.NoError;
     }

@@ -1,83 +1,153 @@
+using System.Runtime.CompilerServices;
+
 namespace Decinet.Utilities;
 
-public class AudioFifoBuffer
-{
-    private readonly int _bufferSize;
-    private readonly byte[] _mainBuffer;
-    private int _availableDataIndex;
-    private int _pullDataIndex;
-    private readonly object _bufferLock;
+// Copyright The OpenTelemetry Authors under the Apache License.
 
-    /// <summary>
-    /// Handles First-in/First-out buffering for audio backends that needs critical timing.
-    /// </summary>
-    /// <param name="size"></param>
-    /// <param name="sampleRate"></param>
-    /// <param name="bytesPerSample"></param>
-    /// <param name="channelCount"></param>
-    public AudioFifoBuffer(TimeSpan size, int sampleRate, int bytesPerSample, int channelCount)
+/// <summary>
+/// Lock-free implementation of single-reader multi-writer circular buffer.
+/// </summary>
+/// <typeparam name="T">The type of the underlying value.</typeparam>
+public class CircularBuffer
+{
+    private readonly byte[] buffer;
+    private long head;
+    private long tail;
+
+    public CircularBuffer(TimeSpan size, int sampleRate, int bytesPerSample, int channelCount)
     {
-        _bufferSize = (int) Math.Round(size.TotalSeconds * channelCount * sampleRate * bytesPerSample);
-        _mainBuffer = new byte[_bufferSize];
-        _availableDataIndex = 0;
-        _pullDataIndex = 0;
-        _bufferLock = new object();
+        var capacity = (int) Math.Round(size.TotalSeconds * channelCount * sampleRate * bytesPerSample);
+
+        if (capacity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(capacity), capacity, "capacity should be greater than zero.");
+        }
+
+        Capacity = capacity;
+        buffer = new byte[capacity];
     }
 
     /// <summary>
-    /// Stores the incoming raw audio data to be buffered.
+    /// Gets the capacity of the <see cref="CircularBuffer{T}"/>.
     /// </summary>
-    /// <param name="incomingBytes"></param>
-    /// <returns></returns>
-    public bool TryPushData(byte[] incomingBytes)
-    {
-        lock (_bufferLock)
-        {
-            var inLen = incomingBytes.Length;
+    public int Capacity { get; }
 
-            // the buffer is already full, tell the caller that we can't push
-            // the incoming data.
-            if (_availableDataIndex + inLen > _bufferSize)
+    /// <summary>
+    /// Gets the number of items contained in the <see cref="CircularBuffer{T}"/>.
+    /// </summary>
+    public int Count
+    {
+        get
+        {
+            var tailSnapshot = tail;
+            return (int) (head - tailSnapshot);
+        }
+    }
+
+    /// <summary>
+    /// Gets the number of items added to the <see cref="CircularBuffer{T}"/>.
+    /// </summary>
+    public long AddedCount => head;
+
+    /// <summary>
+    /// Gets the number of items removed from the <see cref="CircularBuffer{T}"/>.
+    /// </summary>
+    public long RemovedCount => tail;
+
+    public bool IsFull => tail - head >= Capacity;
+
+    /// <summary>
+    /// Adds the specified item to the buffer.
+    /// </summary>
+    /// <param name="value">The value to add.</param>
+    /// <returns>
+    /// Returns <c>true</c> if the item was added to the buffer successfully;
+    /// <c>false</c> if the buffer is full.
+    /// </returns>
+    public bool Add(byte value)
+    {
+        while (true)
+        {
+            var tailSnapshot = tail;
+            var headSnapshot = this.head;
+
+            if (headSnapshot - tailSnapshot >= Capacity)
             {
-                return false;
+                return false; // buffer is full
             }
 
-            Array.Copy(incomingBytes, 0, _mainBuffer, _availableDataIndex, inLen);
-            _availableDataIndex += incomingBytes.Length;
+            var head = Interlocked.CompareExchange(ref this.head, headSnapshot + 1, headSnapshot);
+            if (head != headSnapshot)
+            {
+                continue;
+            }
 
+            var index = (int) (head % Capacity);
+            buffer[index] = value;
             return true;
         }
     }
 
     /// <summary>
-    /// Gets the data needed for the backend to play with.
-    /// It returns silence in case there's no audio data
-    /// available in the internal buffer.
+    /// Attempts to add the specified item to the buffer.
     /// </summary>
-    /// <param name="expectedBytes"></param>
-    /// <param name="outData"></param>
-    public void GetData(int expectedBytes, out byte[] outData)
+    /// <param name="value">The value to add.</param>
+    /// <param name="maxSpinCount">The maximum allowed spin count, when set to a negative number or zero, will spin indefinitely.</param>
+    /// <returns>
+    /// Returns <c>true</c> if the item was added to the buffer successfully;
+    /// <c>false</c> if the buffer is full or the spin count exceeded <paramref name="maxSpinCount"/>.
+    /// </returns>
+    public bool TryAdd(byte value, int maxSpinCount)
     {
-        lock (_bufferLock)
+        if (maxSpinCount <= 0)
         {
-            outData = new byte[expectedBytes];
-
-            // if the remaining bytes are less than the available,
-            // just get everything out.
-            var remainingLength = Math.Min(expectedBytes, _bufferSize - _pullDataIndex);
-
-            // we dont have any more data to send...
-            // so let's send the remaining stuff + padding empty bytes.
-            if (remainingLength == 0)
-            {
-                _availableDataIndex = 0;
-                _pullDataIndex = 0;
-                return;
-            }
-            
-            _mainBuffer.AsSpan(_pullDataIndex, remainingLength).CopyTo(outData);
-
-            _pullDataIndex += remainingLength;
+            return Add(value);
         }
+
+        var spinCountDown = maxSpinCount;
+
+        while (true)
+        {
+            var tailSnapshot = tail;
+            var headSnapshot = this.head;
+
+            if (headSnapshot - tailSnapshot >= Capacity)
+            {
+                return false; // buffer is full
+            }
+
+            var head = Interlocked.CompareExchange(ref this.head, headSnapshot + 1, headSnapshot);
+            if (head != headSnapshot)
+            {
+                if (spinCountDown-- == 0)
+                {
+                    return false; // exceeded maximum spin count
+                }
+
+                continue;
+            }
+
+            var index = (int) (head % Capacity);
+            buffer[index] = value;
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Reads an item from the <see cref="CircularBuffer{T}"/>.
+    /// </summary>
+    /// <remarks>
+    /// This function is not reentrant-safe, only one reader is allowed at any given time.
+    /// Warning: There is no bounds check in this method. Do not call unless you have verified Count > 0.
+    /// </remarks>
+    /// <returns>Item read.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte Read()
+    {
+        var index = (int) (tail % Capacity);
+        var value = buffer[index];
+        buffer[index] = 0;
+        tail++;
+        return value;
     }
 }
