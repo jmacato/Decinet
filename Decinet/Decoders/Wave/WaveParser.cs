@@ -25,14 +25,14 @@ internal abstract class WaveParser
 
     public abstract bool TryGetBytes(int numSamples, out ISampleFrame sampleFrame);
 
-    public static WaveParser GetParser(
-        BinaryReader br,
+    public static WaveParser GetParser(BinaryReader br,
         WaveFormat waveFormat,
-        long rawDataStart)
+        long rawDataStart,
+        long subChunkSize)
     {
         return waveFormat.WaveType switch
         {
-            WaveFormatType.Pcm => new PcmParser(br, waveFormat, rawDataStart),
+            WaveFormatType.Pcm => new PcmParser(br, waveFormat, rawDataStart, subChunkSize),
             WaveFormatType.DviAdpcm => new DviAdpcmParser(br, waveFormat, rawDataStart),
             _ => throw new NotSupportedException("Invalid or unknown .wav compression format!")
         };
