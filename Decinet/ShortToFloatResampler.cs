@@ -11,7 +11,7 @@ public class ShortToFloatResampler : IResampler
 {
     private IBackend? _backend;
     private IPlaybackController? _playbackController;
-    private IDSPStack? _dspStack;
+    private IDspStack? _dspStack;
     private bool _isDisposed = false;
     private FileStream _pip;
     private IResampler? _outResampler;
@@ -56,7 +56,7 @@ public class ShortToFloatResampler : IResampler
 
         ProcessShortToFloat(frame,
             receivingFormat,
-            out FloatSampleFrame sampleFrame);
+            out var sampleFrame);
 
         if (_outResampler is not null)
         {
@@ -85,7 +85,7 @@ public class ShortToFloatResampler : IResampler
     }
 
     /// <inheritdoc />
-    public void Connect(IPlaybackController priorNode, IDSPStack targetNode)
+    public void Connect(IPlaybackController priorNode, IDspStack? targetNode)
     {
         _playbackController = priorNode;
         _dspStack = targetNode;

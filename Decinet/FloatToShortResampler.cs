@@ -7,10 +7,14 @@ public class FloatToShortResampler : IResampler
 {
     private IBackend? _backend;
     private IPlaybackController? _playbackController;
-    private IDSPStack? _dspStack;
+    private IDspStack? _dspStack;
     private bool _isDisposed = false;
     private IResampler? _outResampler;
 
+    public void ConnectOutToResampler(IResampler resampler)
+    {
+        _outResampler = resampler;
+    }
     public FloatToShortResampler()
     {
     }
@@ -25,7 +29,8 @@ public class FloatToShortResampler : IResampler
 
         if (incomingFormat == receivingFormat)
             _dspStack?.Receive(data);
- 
+  
+
 
         if (data is not FloatSampleFrame frame)
         {
@@ -56,10 +61,6 @@ public class FloatToShortResampler : IResampler
         }
     }
 
-    public void ConnectOutToResampler(IResampler resampler)
-    {
-        _outResampler = resampler;
-    }
     private void ProcessFloatToShort(FloatSampleFrame data, AudioFormat receivingFormat,
         out ShortSampleFrame shortSampleFrame)
     {
@@ -72,7 +73,7 @@ public class FloatToShortResampler : IResampler
     }
 
     /// <inheritdoc />
-    public void Connect(IPlaybackController priorNode, IDSPStack targetNode)
+    public void Connect(IPlaybackController priorNode, IDspStack? targetNode)
     {
         _playbackController = priorNode;
         _dspStack = targetNode;

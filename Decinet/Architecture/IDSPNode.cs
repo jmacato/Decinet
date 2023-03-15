@@ -1,5 +1,5 @@
 namespace Decinet.Architecture;
 
-public interface IDSPNode : IProcessingNode<ISampleFrame, IDSPNode, IDSPNode>
+public interface IDspNode : IProcessingNode<ISampleFrame, IDspNode, IDspNode>
 {
 }

@@ -3,30 +3,35 @@
 
 using Decinet;
 using Decinet.Backend.macOS;
-using Decinet.Decoders.Vorbis;
-using Decinet.Decoders.Wave;
+using Decinet.Decoders.Vorbis; 
 
 
 Console.WriteLine("Hello, World!");
 
 
-const string y = "/Users/jmacato/Downloads/03-Spectrum-_feat-Matthew-Koma_.ogg";
+const string y = "/Users/jmacato/Downloads/HoliznaCC0-No-One-Is-Perfect.ogg";
 using var fs = File.OpenRead(y);
 
 var wavDecoder = new VorbisDecoder();
 var playerController = new AudioPlaybackController();
-var sampler = new FloatToShortResampler();
-var dspStack = new PassthroughDSPStack();
-var backend = new CoreAudioBackend();
+var sampler1 = new LinearInterpResampler();
+var sampler2 = new FloatToShortResampler();
+var dspStack = new PassthroughDspStack();
+var backend = new MacOsAudioToolkitBackend();
 
 wavDecoder.Connect(backend, playerController);
 wavDecoder.Receive(fs);
 
-playerController.Connect(wavDecoder, sampler);
-sampler.Connect(playerController, dspStack);
-sampler.ConnectBackend(backend);
+playerController.Connect(wavDecoder, sampler1);
 
-dspStack.Connect(sampler, backend);
+sampler1.Connect(playerController, dspStack);
+sampler1.ConnectOutToResampler(sampler2);
+sampler1.ConnectBackend(backend);
+
+sampler2.Connect(playerController, dspStack);
+sampler2.ConnectBackend(backend);
+
+dspStack.Connect(sampler2, backend);
 backend.Connect(dspStack, wavDecoder);
 
 playerController.Play();

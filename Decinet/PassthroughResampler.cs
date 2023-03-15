@@ -6,7 +6,7 @@ public class PassthroughResampler : IResampler
 {
     private IBackend? _backend;
     private IPlaybackController? _playbackController;
-    private IDSPStack? _dspStack;
+    private IDspStack? _dspStack;
     private bool _isDisposed = false;
     private IResampler? _outResampler;
  
@@ -26,7 +26,7 @@ public class PassthroughResampler : IResampler
   
 
     /// <inheritdoc />
-    public void Connect(IPlaybackController priorNode, IDSPStack targetNode)
+    public void Connect(IPlaybackController priorNode, IDspStack targetNode)
     {
         _playbackController = priorNode;
         _dspStack = targetNode;

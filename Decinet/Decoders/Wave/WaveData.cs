@@ -2,7 +2,7 @@ namespace Decinet.Decoders.Wave;
 
 internal struct WaveData
 {
-    public string SubChunkID; // should contain the word data
+    public string SubChunkId; // should contain the word data
     public uint SubChunkSize; // Stores the size of the data block
 
     public static WaveData Parse(BinaryReader reader)
@@ -22,10 +22,10 @@ internal struct WaveData
 
         var data = new WaveData
         {
-            SubChunkID = reader.ReadFourCc()
+            SubChunkId = reader.ReadFourCc()
         };
 
-        if (data.SubChunkID != "data")
+        if (data.SubChunkId != "data")
         {
             throw new InvalidDataException("Invalid or missing .wav file data chunk!");
         }

@@ -2,7 +2,7 @@
 
 internal struct WaveFormat
 {
-    public string SubChunkID;
+    public string SubChunkId;
     public uint SubChunkSize;
     public WaveFormatType WaveType;
     public ushort NumChannels;
@@ -17,10 +17,10 @@ internal struct WaveFormat
     {
         var format = new WaveFormat
         {
-            SubChunkID = reader.ReadFourCc()
+            SubChunkId = reader.ReadFourCc()
         };
         
-        if (format.SubChunkID != "fmt ")
+        if (format.SubChunkId != "fmt ")
         {
             throw new InvalidDataException("Invalid or missing .wav file format chunk!");
         }

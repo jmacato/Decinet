@@ -2,7 +2,7 @@ using Decinet.Architecture;
 
 namespace Decinet;
 
-public class PassthroughDSPStack : IDSPStack
+public class PassthroughDspStack : IDspStack
 {
     private IResampler _resampler;
     private IBackend _backend;
@@ -34,13 +34,13 @@ public class PassthroughDSPStack : IDSPStack
     }
 
     /// <inheritdoc />
-    public void Add(IDSPNode node)
+    public void Add(IDspNode node)
     {
         throw new NotImplementedException();
     }
 
     /// <inheritdoc />
-    public void Remove(IDSPNode node)
+    public void Remove(IDspNode node)
     {
         throw new NotImplementedException();
     }

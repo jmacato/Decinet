@@ -120,26 +120,26 @@ namespace LibResample.Sharp
                 throw new ArgumentException("factor" + factor + "is not between minFactor=" + _minFactor + " and maxFactor=" + _maxFactor);
             }
 
-            int outBufferLen = buffers.GetOutputBufferLength();
-            int inBufferLen = buffers.GetInputBufferLenght();
+            var outBufferLen = buffers.GetOutputBufferLength();
+            var inBufferLen = buffers.GetInputBufferLenght();
 
-            float[] imp = _imp;
-            float[] impD = _impD;
-            float lpScl = _lpScl;
-            int nwing = _nwing;
-            bool interpFilt = false;
+            var imp = _imp;
+            var impD = _impD;
+            var lpScl = _lpScl;
+            var nwing = _nwing;
+            var interpFilt = false;
 
-            int inBufferUsed = 0;
-            int outSampleCount = 0;
+            var inBufferUsed = 0;
+            var outSampleCount = 0;
 
             if ((_yp != 0) && (outBufferLen - outSampleCount) > 0)
             {
-                int len = Math.Min(outBufferLen - outSampleCount, _yp);
+                var len = Math.Min(outBufferLen - outSampleCount, _yp);
 
                 buffers.ConsumeOutput(_y, 0, len);
 
                 outSampleCount += len;
-                for (int i = 0; i < _yp - len; i++)
+                for (var i = 0; i < _yp - len; i++)
                 {
                     _y[i] = _y[i + len];
                 }
@@ -158,7 +158,7 @@ namespace LibResample.Sharp
 
             while (true)
             {
-                int len = _xSize - _xread;
+                var len = _xSize - _xread;
 
                 if (len >= inBufferLen - inBufferUsed)
                 {
@@ -174,7 +174,7 @@ namespace LibResample.Sharp
                 if (lastBatch && (inBufferUsed == inBufferLen))
                 {
                     nx = _xread - _xoff;
-                    for (int i = 0; i < _xoff; i++)
+                    for (var i = 0; i < _xoff; i++)
                     {
                         _x[_xread + i] = 0;
                     }
@@ -204,16 +204,16 @@ namespace LibResample.Sharp
                 _time -= nx;
                 _xp += nx;
 
-                int ncreep = (int)(_time) - _xoff;
+                var ncreep = (int)(_time) - _xoff;
                 if (ncreep != 0)
                 {
                     _time -= ncreep;
                     _xp += ncreep;
                 }
 
-                int nreuse = _xread - (_xp - _xoff);
+                var nreuse = _xread - (_xp - _xoff);
 
-                for (int i = 0; i < nreuse; i++)
+                for (var i = 0; i < nreuse; i++)
                 {
                     _x[i] = _x[i + (_xp - _xoff)];
                 }
@@ -229,7 +229,7 @@ namespace LibResample.Sharp
 
                     buffers.ConsumeOutput(_y, 0, len);
                     outSampleCount += len;
-                    for (int i = 0; i < _yp - len; i++)
+                    for (var i = 0; i < _yp - len; i++)
                     {
                         _y[i] = _y[i + len];
                     }
@@ -262,15 +262,15 @@ namespace LibResample.Sharp
 
         private int LrsSrcUp(float[] x, float[] y, double factor, int nx, int nwing, float lpScl, float[] imp, float[] impD, bool interp)
         {
-            float[] xpArray = x;
+            var xpArray = x;
             int xpIndex;
 
-            float[] ypArray = y;
-            int ypIndex = 0;
+            var ypArray = y;
+            var ypIndex = 0;
 
             float v;
 
-            double currentTime = _time;
+            var currentTime = _time;
             double dt;
             double endTime;
 
@@ -279,8 +279,8 @@ namespace LibResample.Sharp
             endTime = currentTime + nx;
             while (currentTime < endTime)
             {
-                double leftPhase = currentTime - Math.Floor(currentTime);
-                double rightPhase = 1.0 - leftPhase;
+                var leftPhase = currentTime - Math.Floor(currentTime);
+                var rightPhase = 1.0 - leftPhase;
 
                 xpIndex = (int)currentTime;
                 v = FilterKit.LrsFilterUp(imp, impD, nwing, interp, xpArray, xpIndex++, leftPhase, -1);
@@ -298,15 +298,15 @@ namespace LibResample.Sharp
 
         private int LrsSrcUd(float[] x, float[] y, double factor, int nx, int nwing, float lpScl, float[] imp, float[] impD, bool interp)
         {
-            float[] xpArray = x;
+            var xpArray = x;
             int xpIndex;
 
-            float[] ypArray = y;
-            int ypIndex = 0;
+            var ypArray = y;
+            var ypIndex = 0;
 
             float v;
 
-            double currentTime = _time;
+            var currentTime = _time;
             double dh;
             double dt;
             double endTime;
@@ -318,8 +318,8 @@ namespace LibResample.Sharp
             endTime = currentTime + nx;
             while (currentTime < endTime)
             {
-                double leftPhase = currentTime - Math.Floor(currentTime);
-                double rightPhase = 1.0 - leftPhase;
+                var leftPhase = currentTime - Math.Floor(currentTime);
+                var rightPhase = 1.0 - leftPhase;
 
                 xpIndex = (int)currentTime;
                 v = FilterKit.LrsFilterUd(imp, impD, nwing, interp, xpArray, xpIndex++, leftPhase, -1, dh);

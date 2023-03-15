@@ -10,7 +10,7 @@ internal class PcmParser : WaveParser
 {
     private readonly long _rawDataStartOffset;
     private readonly long _totalRawDataBytes;
-    private int samplesSentBytes;
+    private int _samplesSentBytes;
     private readonly FileStream _tmp;
     private readonly SineWaveProvider32 _sineWaveProvider;
     private readonly byte[] _data;
@@ -45,7 +45,7 @@ internal class PcmParser : WaveParser
 
     public class SineWaveProvider32
     {
-        int sample;
+        int _sample;
 
         public SineWaveProvider32()
         {
@@ -55,7 +55,7 @@ internal class PcmParser : WaveParser
 
         public float Frequency { get; set; }
         public float Amplitude { get; set; }
-        private int offset;
+        private int _offset;
 
         public int Read(short[] buffer, int sampleCount, int sampleRate, int chCount)
         {
@@ -64,9 +64,9 @@ internal class PcmParser : WaveParser
                 for (var i = 0; i < chCount; i++)
                 {
                     buffer[n + i] =
-                        (short) (Amplitude * Math.Sin((2 * Math.PI * sample * Frequency) / sampleRate));
-                    sample++;
-                    if (sample >= sampleRate) sample = 0;
+                        (short) (Amplitude * Math.Sin((2 * Math.PI * _sample * Frequency) / sampleRate));
+                    _sample++;
+                    if (_sample >= sampleRate) _sample = 0;
                 }
             }
 
@@ -79,15 +79,15 @@ internal class PcmParser : WaveParser
         var bytesPerSample = Format.BitsPerSample / 8;
         var channelCount = Format.NumChannels;
         var samplesRequestedBytes = numSamples * bytesPerSample * channelCount;
-        var samplesRemainingBytes = (int) _totalRawDataBytes - samplesSentBytes;
+        var samplesRemainingBytes = (int) _totalRawDataBytes - _samplesSentBytes;
 
         samplesRequestedBytes = MathExtensions.MinVal(samplesRequestedBytes, samplesRemainingBytes);
 
-        var targetOffset = (int) _rawDataStartOffset + samplesSentBytes;
+        var targetOffset = (int) _rawDataStartOffset + _samplesSentBytes;
         var smpF = ShortSampleFrame.Create(samplesRequestedBytes, channelCount, AudioFormat);
         
         var data = _data[targetOffset..samplesRequestedBytes];
-        short[] sdata = new short[data.Length / 2];
+        var sdata = new short[data.Length / 2];
         Buffer.BlockCopy(data, 0, sdata, 0, data.Length);
         
         _tmp.Write(data);
@@ -97,11 +97,11 @@ internal class PcmParser : WaveParser
             smpF.InterleavedSampleData[i] = sdata[i];
         }
 
-        var normalizedTotalSent = samplesSentBytes / (float) samplesRemainingBytes;
+        var normalizedTotalSent = _samplesSentBytes / (float) samplesRemainingBytes;
         var totalTime = (samplesRemainingBytes / (float) bytesPerSample / Format.SampleRate);
 
         CurrentPosition = TimeSpan.FromSeconds(totalTime * normalizedTotalSent);
-        samplesSentBytes += samplesRequestedBytes;
+        _samplesSentBytes += samplesRequestedBytes;
         sampleFrame = smpF;
         return true;
     }

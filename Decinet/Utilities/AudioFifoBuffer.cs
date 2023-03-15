@@ -11,9 +11,9 @@ namespace Decinet.Utilities;
 /// <typeparam name="T">The type of the underlying value.</typeparam>
 public class CircularBuffer
 {
-    private readonly byte[] buffer;
-    private long head;
-    private long tail;
+    private readonly byte[] _buffer;
+    private long _head;
+    private long _tail;
 
     public CircularBuffer(int capacity)
     {
@@ -23,7 +23,7 @@ public class CircularBuffer
         }
 
         Capacity = capacity;
-        buffer = new byte[capacity];
+        _buffer = new byte[capacity];
     }
 
     /// <summary>
@@ -38,22 +38,22 @@ public class CircularBuffer
     {
         get
         {
-            var tailSnapshot = tail;
-            return (int) (head - tailSnapshot);
+            var tailSnapshot = _tail;
+            return (int) (_head - tailSnapshot);
         }
     }
 
     /// <summary>
     /// Gets the number of items added to the <see cref="CircularBuffer{T}"/>.
     /// </summary>
-    public long AddedCount => head;
+    public long AddedCount => _head;
 
     /// <summary>
     /// Gets the number of items removed from the <see cref="CircularBuffer{T}"/>.
     /// </summary>
-    public long RemovedCount => tail;
+    public long RemovedCount => _tail;
 
-    public bool IsFull => tail - head >= Capacity;
+    public bool IsFull => _tail - _head >= Capacity;
 
     /// <summary>
     /// Adds the specified item to the buffer.
@@ -67,22 +67,22 @@ public class CircularBuffer
     {
         while (true)
         {
-            var tailSnapshot = tail;
-            var headSnapshot = this.head;
+            var tailSnapshot = _tail;
+            var headSnapshot = this._head;
 
             if (headSnapshot - tailSnapshot >= Capacity)
             {
                 return false; // buffer is full
             }
 
-            var head = Interlocked.CompareExchange(ref this.head, headSnapshot + 1, headSnapshot);
+            var head = Interlocked.CompareExchange(ref this._head, headSnapshot + 1, headSnapshot);
             if (head != headSnapshot)
             {
                 continue;
             }
 
             var index = (int) (head % Capacity);
-            buffer[index] = value;
+            _buffer[index] = value;
             return true;
         }
     }
@@ -107,15 +107,15 @@ public class CircularBuffer
 
         while (true)
         {
-            var tailSnapshot = tail;
-            var headSnapshot = this.head;
+            var tailSnapshot = _tail;
+            var headSnapshot = this._head;
 
             if (headSnapshot - tailSnapshot >= Capacity)
             {
                 return false; // buffer is full
             }
 
-            var head = Interlocked.CompareExchange(ref this.head, headSnapshot + 1, headSnapshot);
+            var head = Interlocked.CompareExchange(ref this._head, headSnapshot + 1, headSnapshot);
             if (head != headSnapshot)
             {
                 if (spinCountDown-- == 0)
@@ -127,7 +127,7 @@ public class CircularBuffer
             }
 
             var index = (int) (head % Capacity);
-            buffer[index] = value;
+            _buffer[index] = value;
             return true;
         }
     }
@@ -143,10 +143,10 @@ public class CircularBuffer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte Read()
     {
-        var index = (int) (tail % Capacity);
-        var value = buffer[index];
-        buffer[index] = 0;
-        tail++;
+        var index = (int) (_tail % Capacity);
+        var value = _buffer[index];
+        _buffer[index] = 0;
+        _tail++;
         return value;
     }
     
@@ -166,14 +166,15 @@ public class CircularBuffer
         var ret = new byte[length];
 
 
-        for (int i = 0; i < length; i++)
+        for (var i = 0; i < length; i++)
         {
             
-            var index = (int) (tail % Capacity);
-           ret[i] = buffer[index];
-            buffer[index] = 0;
-            tail++;
+            var index = (int) (_tail % Capacity);
+           ret[i] = _buffer[index];
+            _buffer[index] = 0;
+            _tail++;
         }
+        
         
         
         return ret;

@@ -10,8 +10,8 @@ public class AudioPlayer
         var wavDecoder = new WaveDecoder();
         var playerController = new AudioPlaybackController();
         var resampler = new ShortToFloatResampler();
-        var dspStack = new PassthroughDSPStack();
-        var backend = new CoreAudioBackend();
+        var dspStack = new PassthroughDspStack();
+        var backend = new MacOsAudioToolkitBackend();
         
         wavDecoder.Connect(backend, playerController);
         playerController.Connect(wavDecoder, resampler);

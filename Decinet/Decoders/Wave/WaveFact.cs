@@ -2,7 +2,7 @@ namespace Decinet.Decoders.Wave;
 
 internal struct WaveFact
 {
-    public string SubChunkID;
+    public string SubChunkId;
     public uint SubChunkSize;
     // Technically this chunk could contain arbitrary data. But in practice
     // it only ever contains a single UInt32 representing the number of
@@ -13,10 +13,10 @@ internal struct WaveFact
     {
         var fact = new WaveFact
         {
-            SubChunkID = reader.ReadFourCc()
+            SubChunkId = reader.ReadFourCc()
         };
         
-        if (fact.SubChunkID != "fact")
+        if (fact.SubChunkId != "fact")
         {
             throw new InvalidDataException("Invalid or missing .wav file fact chunk!");
         }

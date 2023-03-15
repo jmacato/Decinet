@@ -1,4 +1,4 @@
-using System;
+ 
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Decinet.Architecture;
@@ -7,19 +7,17 @@ using Decinet.Utilities;
 
 namespace Decinet.Backend.macOS;
 
-public class CoreAudioBackend : IBackend
+public class MacOsAudioToolkitBackend : IBackend
 {
     private readonly AudioFormat _desiredAudioFormat;
-    private IDSPStack _dspEngine;
-    private IDecoder _decoder;
-    private volatile bool _isAudioStopped = false;
+    private IDecoder? _decoder;
+    private volatile bool _isAudioStopped ;
 
-    public CoreAudioBackend()
+    public MacOsAudioToolkitBackend()
     {
         _desiredAudioFormat = new AudioFormat(typeof(short), 2, 44100, 2);
 
-
-        _audioBuffer = new CircularBuffer(0x1000);
+        _audioBuffer = new CircularBuffer(KAudioQueueBufferSize);
 
         _timer = new Thread(FrameCallback);
     }
@@ -30,13 +28,13 @@ public class CoreAudioBackend : IBackend
         {
             Thread.Sleep(TimeSpan.FromMilliseconds(1));
 
-            if (incomingFrames.Count == 0)
+            if (_incomingFrames.Count == 0)
             {
-                _decoder.TryRequestNewFrame(TimeSpan.FromMilliseconds(100));
+                _decoder?.TryRequestNewFrame(TimeSpan.FromMilliseconds(10));
                 continue;
             }
 
-            using var currentFrame = incomingFrames.Dequeue();
+            using var currentFrame = _incomingFrames.Dequeue();
 
             var tempByteArray = new byte[currentFrame.InterleavedSampleData.Length * sizeof(short)];
 
@@ -65,13 +63,8 @@ public class CoreAudioBackend : IBackend
     }
 
 
-    private int backendCalls = 0;
-    private int bufferCalls = 0;
-    private float[] _data;
-    private bool _hasData;
-    private Queue<ShortSampleFrame> incomingFrames = new();
+    private readonly Queue<ShortSampleFrame> _incomingFrames = new();
     private readonly Thread _timer;
-    private bool _connected;
     private readonly CircularBuffer _audioBuffer;
 
     /// <inheritdoc />
@@ -83,24 +76,21 @@ public class CoreAudioBackend : IBackend
         if (data is ShortSampleFrame floatFrame &&
             data.AudioFormat == _desiredAudioFormat)
         {
-            incomingFrames.Enqueue(floatFrame);
+            _incomingFrames.Enqueue(floatFrame);
         }
     }
 
     /// <inheritdoc />
-    public void Connect(IDSPStack priorNode, IDecoder targetNode)
+    public void Connect(IDspStack? priorNode, IDecoder? targetNode)
     {
-        _dspEngine = priorNode;
         _decoder = targetNode;
-
         InitializeAudioToolkit();
-
         _timer.Start();
     }
 
     private void InitializeAudioToolkit()
     {
-        AudioStreamBasicDescription audioFormat = new AudioStreamBasicDescription
+        var audioFormat = new AudioStreamBasicDescription
         {
             mSampleRate = _desiredAudioFormat.SampleRate,
             mFormatID = 0x6C70636D, // kAudioFormatLinearPCM
@@ -113,9 +103,9 @@ public class CoreAudioBackend : IBackend
             mReserved = 0
         };
 
-        _callback = (IntPtr userData, IntPtr queue, IntPtr buffer) =>
+        _callback = (_, queue, buffer) =>
         {
-            int bytesRead = FillBuffer(buffer, _audioBuffer.ReadBytes(0x1000));
+            var bytesRead = FillBuffer(buffer, _audioBuffer.ReadBytes(KAudioQueueBufferSize));
             if (bytesRead > 0)
             {
                 AudioQueueEnqueueBuffer(queue, buffer, 0, IntPtr.Zero);
@@ -126,15 +116,15 @@ public class CoreAudioBackend : IBackend
             }
         };
 
-         AudioQueueNewOutput(ref audioFormat, _callback, nint.Zero, nint.Zero, nint.Zero, 0, out _audioQueue);
+        AudioQueueNewOutput(ref audioFormat, _callback, nint.Zero, nint.Zero, nint.Zero, 0, out _audioQueue);
 
-        for (int i = 0; i < _audioQueueBuffers.Length; i++)
+        for (var i = 0; i < _audioQueueBuffers.Length; i++)
         {
             AudioQueueAllocateBuffer(_audioQueue, KAudioQueueBufferSize, out _audioQueueBuffers[i]);
-            int bytesRead = FillBuffer(_audioQueueBuffers[i], new byte[0x1]);
+            var bytesRead = FillBuffer(_audioQueueBuffers[i], new byte[0x1]);
             if (bytesRead > 0)
             {
-                var e3 = AudioQueueEnqueueBuffer(_audioQueue, _audioQueueBuffers[i], 0, nint.Zero);
+                AudioQueueEnqueueBuffer(_audioQueue, _audioQueueBuffers[i], 0, nint.Zero);
             }
             else
             {
@@ -152,10 +142,10 @@ public class CoreAudioBackend : IBackend
 
     private int FillBuffer(nint buffer, byte[] soundSamples)
     {
-        AudioQueueBufferStruct audioQueueBuffer = Marshal.PtrToStructure<AudioQueueBufferStruct>(buffer);
+        var audioQueueBuffer = Marshal.PtrToStructure<AudioQueueBufferStruct>(buffer);
 
         // Calculate the number of bytes to copy
-        int bytesToCopy = Math.Min(soundSamples.Length, KAudioQueueBufferSize);
+        var bytesToCopy = Math.Min(soundSamples.Length, KAudioQueueBufferSize);
 
         // Copy the data from the soundSamples to the buffer
         Marshal.Copy(soundSamples, 0, audioQueueBuffer.AudioData, bytesToCopy);
@@ -176,13 +166,13 @@ public class CoreAudioBackend : IBackend
 
     public void Dispose()
     {
-        _connected = false;
         _isAudioStopped = true;
 
         AudioQueueStop(_audioQueue, true);
-        for (int i = 0; i < _audioQueueBuffers.Length; i++)
+        
+        foreach (var t in _audioQueueBuffers)
         {
-            AudioQueueDispose(_audioQueueBuffers[i], true);
+            AudioQueueDispose(t, true);
         }
 
         AudioQueueDispose(_audioQueue, true);
@@ -191,26 +181,25 @@ public class CoreAudioBackend : IBackend
     [StructLayout(LayoutKind.Sequential)]
     private struct AudioQueueBufferStruct
     {
-        public readonly uint AudioDataBytesCapacity;
+        private readonly uint AudioDataBytesCapacity;
         public readonly nint AudioData;
         public uint AudioDataByteSize;
-        public readonly nint UserData;
-
-        public readonly uint PacketDescriptionCapacity;
-        public readonly nint IntPtrPacketDescriptions;
-        public readonly int PacketDescriptionCount;
+        private readonly nint UserData;
+        private readonly uint PacketDescriptionCapacity;
+        private readonly nint IntPtrPacketDescriptions;
+        private readonly int PacketDescriptionCount;
     }
 
 
     private const int KAudioQueueBufferSize = 0x10000;
 
     private nint _audioQueue;
-    private nint[] _audioQueueBuffers = new nint[2];
-    private AudioQueueOutputCallback _callback;
+    private readonly nint[] _audioQueueBuffers = new nint[2];
+    private AudioQueueOutputCallback? _callback;
 
     [DllImport("/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox")]
     private static extern int AudioQueueNewOutput(ref AudioStreamBasicDescription inFormat,
-        AudioQueueOutputCallback inCallbackProc, nint inUserData, nint inCallbackRunLoop, nint inCallbackRunLoopMode,
+        AudioQueueOutputCallback? inCallbackProc, nint inUserData, nint inCallbackRunLoop, nint inCallbackRunLoopMode,
         uint inFlags, out nint outAq);
 
     [DllImport("/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox")]

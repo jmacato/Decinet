@@ -5,7 +5,7 @@ namespace Decinet;
 
 public class AudioPlaybackController : IPlaybackController
 {
-    private IDecoder _decoder;
+    private IDecoder? _decoder;
     private IResampler _resampler;
     private IPlaybackController.PlaybackStatus _status;
     private TimeSpan? _totalDuration;
@@ -21,7 +21,7 @@ public class AudioPlaybackController : IPlaybackController
         }
     }
 
-    public void Connect(IDecoder priorNode, IResampler targetNode)
+    public void Connect(IDecoder? priorNode, IResampler targetNode)
     {
         _decoder = priorNode;
         _resampler = targetNode;

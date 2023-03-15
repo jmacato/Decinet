@@ -1,8 +1,8 @@
 namespace Decinet.Architecture;
 
-public interface IDSPStack : IProcessingNode<ISampleFrame, IResampler, IBackend>
+public interface IDspStack : IProcessingNode<ISampleFrame, IResampler, IBackend>
 {
     void Initialize(AudioFormat incomingAudioFormat);
-    void Add(IDSPNode node);
-    void Remove(IDSPNode node);
+    void Add(IDspNode node);
+    void Remove(IDspNode node);
 }

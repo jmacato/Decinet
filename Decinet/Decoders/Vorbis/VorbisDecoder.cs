@@ -108,7 +108,6 @@ public class VorbisDecoder : IDecoder
     {
         var capacity = (int) Math.Round(sampleTime.TotalSeconds * _currentStreamAudioFormat1.ChannelCount * _currentStreamAudioFormat1.SampleRate * _currentStreamAudioFormat1.BytesPerSample);
 
-        
         var samples = FloatSampleFrame.Create(capacity, _currentStreamAudioFormat1.ChannelCount,
             _currentStreamAudioFormat1);
 
