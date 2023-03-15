@@ -1,24 +1,18 @@
-﻿using System.Linq.Expressions;
-using System.Reflection.Metadata.Ecma335;
 using Decinet.Architecture;
 using Decinet.Samples;
-using Decinet.Utilities;
-using Microsoft.Win32.SafeHandles;
 
 namespace Decinet;
- 
-public class ShortToFloatResampler : IResampler
+
+public class FloatToShortResampler : IResampler
 {
     private IBackend? _backend;
     private IPlaybackController? _playbackController;
     private IDSPStack? _dspStack;
     private bool _isDisposed = false;
-    private FileStream _pip;
     private IResampler? _outResampler;
 
-    public ShortToFloatResampler()
+    public FloatToShortResampler()
     {
-        _pip = File.Create($"{Guid.NewGuid():N}.resampl.rawshort");
     }
 
     /// <inheritdoc />
@@ -31,15 +25,9 @@ public class ShortToFloatResampler : IResampler
 
         if (incomingFormat == receivingFormat)
             _dspStack?.Receive(data);
+ 
 
-        // if (incomingFormat.SampleType != typeof(short) || receivingFormat.SampleType != typeof(float)) return;
-
-        if (incomingFormat.SampleRate != receivingFormat.SampleRate)
-        {
-            // TODO: Warn here?
-        }
-
-        if (data is not ShortSampleFrame frame)
+        if (data is not FloatSampleFrame frame)
         {
 
             if (_outResampler is not null)
@@ -54,9 +42,9 @@ public class ShortToFloatResampler : IResampler
             return;
         }
 
-        ProcessShortToFloat(frame,
+        ProcessFloatToShort(frame,
             receivingFormat,
-            out FloatSampleFrame sampleFrame);
+            out var sampleFrame);
 
         if (_outResampler is not null)
         {
@@ -72,15 +60,14 @@ public class ShortToFloatResampler : IResampler
     {
         _outResampler = resampler;
     }
-
-    private void ProcessShortToFloat(ShortSampleFrame data, AudioFormat receivingFormat,
-        out FloatSampleFrame floatSampleFrame)
+    private void ProcessFloatToShort(FloatSampleFrame data, AudioFormat receivingFormat,
+        out ShortSampleFrame shortSampleFrame)
     {
-        floatSampleFrame = FloatSampleFrame.Create(data.SampleCount, data.ChannelCount, receivingFormat);
+        shortSampleFrame = ShortSampleFrame.Create(data.SampleCount, data.ChannelCount, receivingFormat);
         for (var i = 0; i < data.InterleavedSampleData.Length; i++)
         {
-            var shortSample = data.InterleavedSampleData[i] / (float) (short.MaxValue - 1);
-            floatSampleFrame.InterleavedSampleData[i] = shortSample;
+            var shortSample = (short) (data.InterleavedSampleData[i] * (short.MaxValue - 1));
+            shortSampleFrame.InterleavedSampleData[i] = shortSample;
         }
     }
 

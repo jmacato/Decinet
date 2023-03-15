@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Runtime.CompilerServices;
 
 namespace Decinet.Utilities;
@@ -14,10 +15,8 @@ public class CircularBuffer
     private long head;
     private long tail;
 
-    public CircularBuffer(TimeSpan size, int sampleRate, int bytesPerSample, int channelCount)
+    public CircularBuffer(int capacity)
     {
-        var capacity = (int) Math.Round(size.TotalSeconds * channelCount * sampleRate * bytesPerSample);
-
         if (capacity <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(capacity), capacity, "capacity should be greater than zero.");
@@ -149,5 +148,34 @@ public class CircularBuffer
         buffer[index] = 0;
         tail++;
         return value;
+    }
+    
+    
+    /// <summary>
+    /// Reads an item from the <see cref="CircularBuffer{T}"/>.
+    /// </summary>
+    /// <remarks>
+    /// This function is not reentrant-safe, only one reader is allowed at any given time.
+    /// Warning: There is no bounds check in this method. Do not call unless you have verified Count > 0.
+    /// </remarks>
+    /// <returns>Item read.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte[] ReadBytes(int length)
+    {
+
+        var ret = new byte[length];
+
+
+        for (int i = 0; i < length; i++)
+        {
+            
+            var index = (int) (tail % Capacity);
+           ret[i] = buffer[index];
+            buffer[index] = 0;
+            tail++;
+        }
+        
+        
+        return ret;
     }
 }
