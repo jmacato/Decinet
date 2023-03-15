@@ -6,7 +6,7 @@ using Decinet.Utilities;
 using Microsoft.Win32.SafeHandles;
 
 namespace Decinet;
-
+ 
 public class ShortToFloatResampler : IResampler
 {
     private IBackend? _backend;
