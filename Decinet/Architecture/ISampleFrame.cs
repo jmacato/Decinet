@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace Decinet.Architecture;
 
 public interface ISampleFrame : IDisposable

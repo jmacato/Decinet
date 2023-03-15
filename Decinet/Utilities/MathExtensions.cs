@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Decinet.Utilities;
@@ -12,17 +13,7 @@ public static class MathExtensions
     public static T MinVal<T>(T val1, T val2) where T : INumber<T>
     {
         return (val1 <= val2) ? val1 : val2;
-    }
-    // Convert an object to a byte array
-    public static byte[] ObjectToByteArray(Object obj)
-    {
-        BinaryFormatter bf = new BinaryFormatter();
-        using (var ms = new MemoryStream())
-        {
-            bf.Serialize(ms, obj);
-            return ms.ToArray();
-        }
-    }
+    } 
     
     
 }

@@ -10,7 +10,7 @@ using Decinet.Decoders.Wave;
 Console.WriteLine("Hello, World!");
 
 
-const string y = "/Users/jumarmacato/Downloads/file_example_OOG_1MG.ogg";
+const string y = "/Users/jmacato/Downloads/03-Spectrum-_feat-Matthew-Koma_.ogg";
 using var fs = File.OpenRead(y);
 
 
