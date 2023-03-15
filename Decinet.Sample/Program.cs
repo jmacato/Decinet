@@ -1,16 +1,13 @@
 ﻿// See https://aka.ms/new-console-template for more information
-
-
 using Decinet;
 using Decinet.Backend.macOS;
 using Decinet.Decoders.Vorbis; 
 
-
 Console.WriteLine("Hello, World!");
 
-
-const string y = "/Users/jmacato/Downloads/HoliznaCC0-No-One-Is-Perfect.ogg";
-using var fs = File.OpenRead(y);
+// Courtesy of https://freemusicarchive.org/music/holiznacc0/be-happy-with-who-you-are/no-one-is-perfect/
+const string music = "HoliznaCC0-No-One-Is-Perfect.ogg";
+using var fs = File.OpenRead(music);
 
 var wavDecoder = new VorbisDecoder();
 var playerController = new AudioPlaybackController();

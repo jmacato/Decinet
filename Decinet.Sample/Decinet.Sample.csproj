@@ -13,4 +13,10 @@
       <ProjectReference Include="..\Decinet\Decinet.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="HoliznaCC0-No-One-Is-Perfect.ogg">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>
