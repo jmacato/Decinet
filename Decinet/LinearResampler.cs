@@ -2,7 +2,7 @@ using Decinet.Architecture;
 using Decinet.Samples; 
 namespace Decinet;
 
-public class LinearInterpResampler : IResampler
+public class LinearResampler : IResampler
 {
      private IDspStack _dsp;
     private IBackend _backend;
@@ -22,43 +22,34 @@ public class LinearInterpResampler : IResampler
             return;
         }
 
-        var ratio =   frame.AudioFormat.SampleRate /  (float)_backend.DesiredAudioFormat.SampleRate;
-
         if (_backend.DesiredAudioFormat.SampleRate == frame.AudioFormat.SampleRate)
         {
-            if (_outResampler is null) _dsp?.Receive(data); else _outResampler?.Receive(data);
+            if (_outResampler is null) _dsp.Receive(data); else _outResampler?.Receive(data);
             return;
         }
         
-        var signals = new float[frame.ChannelCount][];
+        var tracks = new float[frame.ChannelCount][];
 
-        for (var i = 0; i < signals.Length; i++)
+        for (var i = 0; i < tracks.Length; i++)
         {
-            signals[i] = new float[frame.SampleCount];
+            tracks[i] = new float[frame.SampleCount];
         }
 
         var interleaveIndex = 0;
 
         for (var i = 0; i < frame.SampleCount; i++)
         {
-            for (var j = 0; j < frame.ChannelCount; j++)
+            for (var ch = 0; ch < frame.ChannelCount; ch++)
             {
-                signals[j][i] = frame.InterleavedSampleData[interleaveIndex++];
+                tracks[ch][i] = frame.InterleavedSampleData[interleaveIndex++];
             }
         }
 
-        var ratioSampleCount = (int) Math.Round(ratio * frame.SampleCount);
-        
         var output = new float[frame.ChannelCount][];
-
-        for (var i = 0; i < signals.Length; i++)
-        {
-            output[i] = new float[ratioSampleCount];
-        }
  
-        for (var j = 0; j < frame.ChannelCount; j++)
+        for (var ch = 0; ch < frame.ChannelCount; ch++)
         { 
-            output[j] = Resample(signals[j], frame.AudioFormat.SampleRate, _backend.DesiredAudioFormat.SampleRate);
+            output[ch] = Resample(tracks[ch], frame.AudioFormat.SampleRate, _backend.DesiredAudioFormat.SampleRate);
  
         }
         
@@ -78,7 +69,7 @@ public class LinearInterpResampler : IResampler
         
         frame.Dispose();
 
-        if (_outResampler is null) _dsp?.Receive(nF); else _outResampler?.Receive(nF);
+        if (_outResampler is null) _dsp.Receive(nF); else _outResampler?.Receive(nF);
         
      }
 
@@ -102,20 +93,20 @@ public class LinearInterpResampler : IResampler
     
     public static float[] Resample(float[] audioData, int sourceSampleRate, int targetSampleRate)
     {
-        int sourceLength = audioData.Length;
-        double sourceDuration = (double)sourceLength / sourceSampleRate;
+        var sourceLength = audioData.Length;
+        var sourceDuration = (double)sourceLength / sourceSampleRate;
 
-        int targetLength = (int)Math.Round(sourceDuration * targetSampleRate);
-        float[] resampledData = new float[targetLength];
+        var targetLength = (int)Math.Round(sourceDuration * targetSampleRate);
+        var resampledData = new float[targetLength];
 
-        double sourceToTargetRatio = (double)targetSampleRate / sourceSampleRate;
-        double targetToSourceRatio = (double)sourceSampleRate / targetSampleRate;
+        var sourceToTargetRatio = (double)targetSampleRate / sourceSampleRate;
+        var targetToSourceRatio = (double)sourceSampleRate / targetSampleRate;
 
-        for (int i = 0; i < targetLength; i++)
+        for (var i = 0; i < targetLength; i++)
         {
-            double sourceIndex = i * targetToSourceRatio;
-            int indexBefore = (int)Math.Floor(sourceIndex);
-            int indexAfter = (int)Math.Ceiling(sourceIndex);
+            var sourceIndex = i * targetToSourceRatio;
+            var indexBefore = (int)Math.Floor(sourceIndex);
+            var indexAfter = (int)Math.Ceiling(sourceIndex);
 
             if (indexBefore < 0 || indexAfter >= sourceLength)
             {
@@ -130,11 +121,11 @@ public class LinearInterpResampler : IResampler
             else
             {
                 // Use linear interpolation for non-integer indices
-                double fractionAfter = sourceIndex - indexBefore;
-                double fractionBefore = 1.0 - fractionAfter;
+                var fractionAfter = sourceIndex - indexBefore;
+                var fractionBefore = 1.0 - fractionAfter;
 
-                float sampleBefore = audioData[indexBefore];
-                float sampleAfter = audioData[indexAfter];
+                var sampleBefore = audioData[indexBefore];
+                var sampleAfter = audioData[indexAfter];
 
                 resampledData[i] = (float)(fractionBefore * sampleBefore + fractionAfter * sampleAfter);
             }

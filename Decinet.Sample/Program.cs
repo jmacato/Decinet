@@ -14,7 +14,7 @@ using var fs = File.OpenRead(y);
 
 var wavDecoder = new VorbisDecoder();
 var playerController = new AudioPlaybackController();
-var sampler1 = new LinearInterpResampler();
+var sampler1 = new LinearResampler();
 var sampler2 = new FloatToShortResampler();
 var dspStack = new PassthroughDspStack();
 var backend = new MacOsAudioToolkitBackend();
