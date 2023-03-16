@@ -84,24 +84,26 @@ internal class PcmParser : WaveParser
         samplesRequestedBytes = MathExtensions.MinVal(samplesRequestedBytes, samplesRemainingBytes);
 
         var targetOffset = (int) _rawDataStartOffset + _samplesSentBytes;
-        var smpF = ShortSampleFrame.Create(samplesRequestedBytes, channelCount, AudioFormat);
         
         var data = _data[targetOffset..samplesRequestedBytes];
         var sdata = new short[data.Length / 2];
         Buffer.BlockCopy(data, 0, sdata, 0, data.Length);
         
         _tmp.Write(data);
-        
-        for (var i = 0; i < sdata.Length; i++)
-        {
-            smpF.InterleavedSampleData[i] = sdata[i];
-        }
 
         var normalizedTotalSent = _samplesSentBytes / (float) samplesRemainingBytes;
         var totalTime = (samplesRemainingBytes / (float) bytesPerSample / Format.SampleRate);
 
         CurrentPosition = TimeSpan.FromSeconds(totalTime * normalizedTotalSent);
         _samplesSentBytes += samplesRequestedBytes;
+        
+        var smpF = ShortSampleFrame.Create(samplesRequestedBytes, channelCount, AudioFormat, CurrentPosition);
+
+        for (var i = 0; i < sdata.Length; i++)
+        {
+            smpF.InterleavedSampleData[i] = sdata[i];
+        }
+        
         sampleFrame = smpF;
         return true;
     }

@@ -64,7 +64,7 @@ public class FloatToShortResampler : IResampler
     private void ProcessFloatToShort(FloatSampleFrame data, AudioFormat receivingFormat,
         out ShortSampleFrame shortSampleFrame)
     {
-        shortSampleFrame = ShortSampleFrame.Create(data.SampleCount, data.ChannelCount, receivingFormat);
+        shortSampleFrame = ShortSampleFrame.Create(data.SampleCount, data.ChannelCount, receivingFormat, data.FrameTime);
         for (var i = 0; i < data.InterleavedSampleData.Length; i++)
         {
             var shortSample = (short) (data.InterleavedSampleData[i] * (short.MaxValue - 1));

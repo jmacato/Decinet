@@ -66,6 +66,8 @@ public class VorbisDecoder : IDecoder
         _currentStreamAudioFormat1 =
             new AudioFormat(typeof(float), sizeof(float), _reader.SampleRate, _reader.Channels);
 
+        _playback.SetDuration(_reader.TotalTime);
+        
         _ready1 = true;
     }
 
@@ -89,10 +91,10 @@ public class VorbisDecoder : IDecoder
     public bool IsSeekable => _isSeekable1;
 
     /// <inheritdoc />
-    public TimeSpan? Duration => _duration1;
+    public TimeSpan? Duration => _reader.TotalTime;
 
     /// <inheritdoc />
-    public TimeSpan? Position => _position;
+    public TimeSpan? Position => _reader.TimePosition;
 
     /// <inheritdoc />
     public bool Ready => _ready1;
@@ -100,7 +102,18 @@ public class VorbisDecoder : IDecoder
     /// <inheritdoc />
     public bool TrySeek(TimeSpan time)
     {
-        throw new NotImplementedException();
+        var ret = false;
+        try
+        {
+            _reader.SeekTo(time);
+            ret = true;
+        }
+        catch (Exception e)
+        {
+            // Log here
+        }
+
+        return ret;
     }
 
     /// <inheritdoc />
@@ -108,13 +121,15 @@ public class VorbisDecoder : IDecoder
     {
         var capacity = (int) Math.Round(sampleTime.TotalSeconds * _currentStreamAudioFormat1.ChannelCount * _currentStreamAudioFormat1.SampleRate * _currentStreamAudioFormat1.BytesPerSample);
 
-        var samples = FloatSampleFrame.Create(capacity, _currentStreamAudioFormat1.ChannelCount,
-            _currentStreamAudioFormat1);
-
-        var res = _reader.ReadSamples(samples.InterleavedSampleData, 0, samples.InterleavedSampleData.Length);
-
+        var k = new float[capacity * _currentStreamAudioFormat1.ChannelCount] ;
+        var res = _reader.ReadSamples(k, 0, k.Length);
         if (res <= 0) return false;
-        
+        var samples = FloatSampleFrame.Create(capacity, _currentStreamAudioFormat1.ChannelCount,
+            _currentStreamAudioFormat1, _reader.TimePosition);
+
+        Array.Copy(k, samples.InterleavedSampleData, k.Length);
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Position)));
+
         _playback?.Receive(samples);
         return true;
     }

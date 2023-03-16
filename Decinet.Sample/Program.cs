@@ -33,4 +33,15 @@ backend.Connect(dspStack, wavDecoder);
 
 playerController.Play();
 
+playerController.PropertyChanged += (sender, eventArgs) =>
+{
+    if (eventArgs.PropertyName == "Position")
+    {
+        Console.SetCursorPosition(0, 1);
+        Console.WriteLine($" {playerController.Position} / {playerController.Duration}");
+    }
+};
+
 Console.ReadLine();
+
+playerController.Stop();

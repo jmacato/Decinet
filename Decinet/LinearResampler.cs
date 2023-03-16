@@ -4,8 +4,8 @@ namespace Decinet;
 
 public class LinearResampler : IResampler
 {
-     private IDspStack _dsp;
-    private IBackend _backend;
+    private IDspStack? _dsp;
+    private IBackend? _backend;
  
     private IResampler? _outResampler;
 
@@ -17,14 +17,14 @@ public class LinearResampler : IResampler
     /// <inheritdoc />
     public void Receive(ISampleFrame data)
     {
-        if (data is not FloatSampleFrame frame)
+        if (data is not FloatSampleFrame frame || _backend is null || _outResampler is null)
         {
             return;
         }
 
-        if (_backend.DesiredAudioFormat.SampleRate == frame.AudioFormat.SampleRate)
+        if (_backend?.DesiredAudioFormat.SampleRate == frame.AudioFormat.SampleRate)
         {
-            if (_outResampler is null) _dsp.Receive(data); else _outResampler?.Receive(data);
+            if (_outResampler is null) _dsp?.Receive(data); else _outResampler?.Receive(data);
             return;
         }
         
@@ -48,15 +48,15 @@ public class LinearResampler : IResampler
         var output = new float[frame.ChannelCount][];
  
         for (var ch = 0; ch < frame.ChannelCount; ch++)
-        { 
-            output[ch] = Resample(tracks[ch], frame.AudioFormat.SampleRate, _backend.DesiredAudioFormat.SampleRate);
- 
+        {
+            if (_backend != null)
+                output[ch] = Resample(tracks[ch], frame.AudioFormat.SampleRate, _backend.DesiredAudioFormat.SampleRate);
         }
         
         interleaveIndex = 0;
         
         var nF = FloatSampleFrame.Create(output[0].Length, _backend.DesiredAudioFormat.ChannelCount,
-            _backend.DesiredAudioFormat);
+            _backend.DesiredAudioFormat, data.FrameTime);
         
         for (var i = 0; i < nF.SampleCount; i++)
         {

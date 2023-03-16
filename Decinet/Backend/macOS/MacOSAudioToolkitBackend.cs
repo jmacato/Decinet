@@ -26,7 +26,7 @@ public class MacOsAudioToolkitBackend : IBackend
     {
         do
         {
-            Thread.Sleep(TimeSpan.FromMilliseconds(1));
+            Thread.Sleep(TimeSpan.FromMilliseconds(2));
 
             if (_incomingFrames.Count == 0)
             {

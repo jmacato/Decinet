@@ -17,6 +17,7 @@ public class AudioPlaybackController : IPlaybackController
     {
         if (_status == IPlaybackController.PlaybackStatus.Playing)
         {
+            Position = data.FrameTime;
             _resampler.Receive(data);
         }
     }
@@ -116,4 +117,8 @@ public class AudioPlaybackController : IPlaybackController
     }
 
     public bool IsSeekable => _decoder.IsSeekable;
+    public void SetDuration(TimeSpan duration)
+    {
+        Duration = duration;
+    }
 }

@@ -7,6 +7,7 @@ public interface ISampleFrame : IDisposable
     AudioFormat AudioFormat { get; }
     int ChannelCount { get; }
     int SampleCount { get; }
+    TimeSpan FrameTime { get; }
 }
 
 public interface ISampleFrame<out TSample> : ISampleFrame where TSample : INumber<TSample>

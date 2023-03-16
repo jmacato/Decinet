@@ -21,5 +21,6 @@ public interface IPlaybackController : INotifyPropertyChanged, IProcessingNode<I
     TimeSpan? Duration { get; }
     TimeSpan? Position { get; set; }
     bool IsSeekable { get; }
-    
+
+    void SetDuration(TimeSpan duration);
 }
